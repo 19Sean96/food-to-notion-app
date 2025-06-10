@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database, Loader2 } from 'lucide-react';
+import { ChevronRight, Database, Loader2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { getNotionDatabaseInfo } from '@/services/notionApi';
@@ -13,7 +13,7 @@ interface NotionSettingsProps {
 }
 
 export const NotionSettings: React.FC<NotionSettingsProps> = ({
-  databaseId,
+  databaseId = '209c89e493af80e99082f014afb82ada',
   onDatabaseIdChange,
   disabled = false,
 }) => {
@@ -87,24 +87,30 @@ export const NotionSettings: React.FC<NotionSettingsProps> = ({
           )}
 
           {dbInfo && (
-            <div className="p-4 bg-gray-50 rounded-md space-y-3">
-              <div>
-                <h4 className="font-medium text-gray-900">Database Info</h4>
-                <p className="text-sm text-gray-600">Name: {dbInfo.title}</p>
-                <p className="text-sm text-gray-600">Total Pages: {dbInfo.propertyCount}</p>
+            <details className="group">
+              <summary className="p-3 bg-gray-50 rounded-t-md cursor-pointer hover:bg-gray-100 flex items-center">
+                <ChevronRight className="w-4 h-4 mr-2 transition-transform group-open:rotate-90" />
+                <span className="font-medium text-gray-900">Database Details</span>
+              </summary>
+              <div className="p-4 bg-gray-50 rounded-b-md space-y-3 border-t border-gray-200">
+                <div>
+                  <h4 className="font-medium text-gray-900">Database Info</h4>
+                  <p className="text-sm text-gray-600">Name: {dbInfo.title}</p>
+                  <p className="text-sm text-gray-600">Total Pages: {dbInfo.propertyCount}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900">Properties</h4>
+                  <ul className="mt-1 space-y-1">
+                    {dbInfo.properties.map((prop, index) => (
+                      <li key={index} className="text-sm text-gray-600">
+                        {prop.name} ({prop.type})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              
-              <div>
-                <h4 className="font-medium text-gray-900">Properties</h4>
-                <ul className="mt-1 space-y-1">
-                  {dbInfo.properties.map((prop, index) => (
-                    <li key={index} className="text-sm text-gray-600">
-                      {prop.name} ({prop.type})
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            </details>
           )}
         </div>
       </CardContent>
