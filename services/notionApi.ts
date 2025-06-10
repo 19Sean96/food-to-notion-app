@@ -41,4 +41,15 @@ export const createNotionPage = async (
         foodName: food.description,
     }
   }
+};
+
+export const getExistingFdcIds = async (databaseId: string): Promise<number[]> => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/notion/database/${databaseId}/ids`);
+      return response.data.fdcIds || [];
+    } catch (error) {
+      console.error('Error fetching existing FDC IDs:', error);
+      // Return an empty array on error so the app can continue to function
+      return [];
+    }
 }; 

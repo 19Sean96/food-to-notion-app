@@ -1,11 +1,9 @@
 import { useState, useCallback } from 'react';
-import { ProcessedFoodItem, FeedbackMessage, NotionCreationResponse } from '@/types';
+import { ProcessedFoodItem, NotionCreationResponse } from '@/types';
 import { createNotionPage } from '@/services/notionApi';
+import { toast } from 'sonner';
 
-export const useNotionIntegration = (
-  setGlobalFeedback: (feedback: FeedbackMessage | null) => void,
-  databaseId: string
-) => {
+export const useNotionIntegration = (databaseId: string) => {
   const [savingItems, setSavingItems] = useState<Record<number, boolean>>({});
 
   const saveToNotion = useCallback(
@@ -16,32 +14,25 @@ export const useNotionIntegration = (
         const result: NotionCreationResponse = await createNotionPage(food, databaseId);
 
         if (result.success) {
-          setGlobalFeedback({
-            type: 'success',
-            message: `✓ ${result.foodName} successfully added`
-          });
+          toast.success(`"${result.foodName}" successfully added to Notion.`);
           return true;
         } else {
-          setGlobalFeedback({
-            type: 'error',
-            message: result.message,
-            details: `Failed to add ${result.foodName} to Notion`
+          toast.error(result.message, {
+            description: `Failed to add "${result.foodName}" to Notion. Please try again.`,
           });
           return false;
         }
       } catch (error) {
         console.error('Error saving to Notion:', error);
-        setGlobalFeedback({
-          type: 'error',
-          message: 'Failed to save to Notion',
-          details: error instanceof Error ? error.message : 'Unknown error'
+        toast.error('Failed to save to Notion', {
+          description: error instanceof Error ? error.message : 'An unknown error occurred.',
         });
         return false;
       } finally {
         setSavingItems(prev => ({ ...prev, [food.id]: false }));
       }
     },
-    [setGlobalFeedback, databaseId]
+    [databaseId]
   );
 
   return {

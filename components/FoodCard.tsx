@@ -1,5 +1,5 @@
 import React from 'react';
-import { Save, Info, ChevronDown, ChevronUp, Loader2, AlertCircle } from 'lucide-react';
+import { Save, Info, ChevronDown, ChevronUp, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { FoodSearchItem, ProcessedFoodItem } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
@@ -10,9 +10,10 @@ interface FoodCardProps {
   food: FoodSearchItem;
   isSaving: boolean;
   onSaveToNotion: (food: ProcessedFoodItem) => void;
+  isAlreadyInNotion: boolean;
 }
 
-export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNotion }) => {
+export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNotion, isAlreadyInNotion }) => {
   const [showDetails, setShowDetails] = React.useState(false);
   const [showRawJson, setShowRawJson] = React.useState(false);
 
@@ -155,6 +156,12 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
 
   return (
     <Card className="h-full flex flex-col transition-all duration-200 hover:shadow-lg">
+      {isAlreadyInNotion && (
+        <div className="flex items-center gap-2 bg-green-50 text-green-800 text-sm font-medium px-4 py-2 border-b">
+          <CheckCircle size={16} />
+          <span>Already saved to Notion</span>
+        </div>
+      )}
       <CardHeader>
         <CardTitle className="line-clamp-2">{getStringValue(detailedFood.description)}</CardTitle>
         
@@ -370,9 +377,10 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
           size="sm"
           onClick={() => onSaveToNotion(detailedFood)}
           isLoading={isSaving}
+          disabled={isAlreadyInNotion || isSaving}
           icon={<Save size={16} />}
         >
-          Save to Notion
+          {isAlreadyInNotion ? 'Saved' : 'Save to Notion'}
         </Button>
       </CardFooter>
     </Card>

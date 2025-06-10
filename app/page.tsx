@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { FeedbackMessage } from '@/components/FeedbackMessage';
 import { FoodResultsList } from '@/components/FoodResultsList';
 import { useFoodSearch } from '@/hooks/useFoodSearch';
 import { useNotionIntegration } from '@/hooks/useNotionIntegration';
@@ -20,30 +19,32 @@ export default function Home() {
     loading,
     feedbackMessage,
     dataTypeFilter,
+    existingFdcIds,
     addQuery,
     removeQuery,
     updateQuery,
     updateDataTypeFilter,
+    addExistingFdcId,
     searchAllFoods,
     setFeedbackMessage
-  } = useFoodSearch();
+  } = useFoodSearch(notionDatabaseId);
 
   const {
     saveToNotion,
     savingItems
-  } = useNotionIntegration(setFeedbackMessage, notionDatabaseId);
+  } = useNotionIntegration(notionDatabaseId);
 
   const handleSaveToNotion = async (food: ProcessedFoodItem) => {
     if (!notionDatabaseId) {
-      setFeedbackMessage({
-        type: 'error',
-        message: 'Please enter a Notion database ID first',
-        details: 'You need to provide a valid Notion database ID to save items.'
-      });
-      return;
+        // This can also be a toast notification for consistency
+        alert('Please enter a Notion database ID first');
+        return;
     }
 
-    await saveToNotion(food);
+    const success = await saveToNotion(food);
+    if (success) {
+        addExistingFdcId(food.id);
+    }
   };
 
   const notionSettingsProps = {
@@ -99,16 +100,16 @@ export default function Home() {
           
             <div className="flex-1 mt-8 lg:mt-0">
                 {feedbackMessage && (
-                <FeedbackMessage
-                    feedback={feedbackMessage}
-                    onDismiss={() => setFeedbackMessage(null)}
-                />
+                <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-lg">
+                    {feedbackMessage.message}
+                </div>
                 )}
                 
                 <FoodResultsList
                 results={results}
                 savingItems={savingItems}
                 onSaveToNotion={handleSaveToNotion}
+                existingFdcIds={existingFdcIds}
                 />
             </div>
         </div>
