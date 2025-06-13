@@ -81,7 +81,7 @@ export const NotionSettings: React.FC<NotionSettingsProps> = ({
             <div>
             <h4 className="font-medium text-gray-900">Database Info</h4>
             <p className="text-sm text-gray-600">Name: {dbInfo.title}</p>
-            <p className="text-sm text-gray-600">Total Pages: {dbInfo.propertyCount}</p>
+            <p className="text-sm text-gray-600">Total Pages: {dbInfo.pageCount}</p>
             </div>
             
             <div>

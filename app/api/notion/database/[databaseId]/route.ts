@@ -17,7 +17,7 @@ export async function GET(
         database_id: databaseId,
       });
   
-      // Get the first 100 pages to count total entries
+      // Get the first 100 pages to count total pages
       const pages = await notion.databases.query({
         database_id: databaseId,
         page_size: 100,
@@ -25,7 +25,7 @@ export async function GET(
   
       const response = {
         title: (database as any).title[0]?.plain_text || "Untitled",
-        propertyCount: pages.results.length,
+        pageCount: pages.results.length,
         properties: Object.entries(database.properties).map(([name, prop]) => ({
           name,
           type: prop.type,
