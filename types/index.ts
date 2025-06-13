@@ -171,7 +171,7 @@ export interface NotionCreationResponse {
 
 export interface NotionDatabaseInfo {
   title: string;
-  propertyCount: number;
+  pageCount: number;
   properties: Array<{
     name: string;
     type: string;
