@@ -113,7 +113,7 @@ export const mapFoodCategory = (usdaCategory: any) => {
   
   // Helper function to format nutrient value with proper rounding and color coding for Notion
   const formatNutrientForNotion = (value: number | undefined | null, unit = '') => {
-    if (value === undefined || value === null || value === 0) {
+    if (value === undefined || value === null) {
       return {
         text: 'N/A',
         color: 'red'
