@@ -81,9 +81,10 @@ export const useFoodSearch = (databaseId: string) => {
       }
 
       const totalFoods = allFoods.reduce((sum, result) => sum + result.foods.length, 0);
+      const queryLabel = activeQueries.length === 1 ? 'query' : 'queries';
       setFeedbackMessage({
         type: 'info',
-        message: `Found ${totalFoods} food item(s) for ${activeQueries.length} quer(y/ies).`
+        message: `Found ${totalFoods} food item(s) for ${activeQueries.length} ${queryLabel}.`
       });
 
     } catch (error) {
