@@ -1,3 +1,268 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities; 
+@tailwind utilities;
+
+/* ShadCN/UI CSS Variables */
+@layer base {
+  :root {
+    /* Modern Light Theme */
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    
+    /* Primary Brand - Modern Blue */
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    
+    /* Secondary */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    
+    /* Muted */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    /* Accent */
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    /* Borders */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    
+    /* Radius */
+    --radius: 0.75rem;
+    
+    /* Custom Nutrition Colors - More sophisticated */
+    --nutrition-calories: 24 74% 58%;        /* Warm amber */
+    --nutrition-protein: 142 69% 58%;        /* Fresh green */
+    --nutrition-carbs: 217 91% 60%;          /* Vibrant blue */
+    --nutrition-fat: 0 72% 62%;              /* Warm red */
+    --nutrition-fiber: 262 80% 65%;          /* Rich purple */
+    --nutrition-sodium: 25 95% 53%;          /* Energetic orange */
+    
+    /* Chart colors for dashboard */
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    /* Modern Dark Theme - Inspired by your reference images */
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 40% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* Primary - Bright accent in dark mode */
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    
+    /* Secondary */
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 40% 98%;
+    
+    /* Muted */
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    
+    /* Accent */
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 40% 98%;
+    
+    /* Destructive */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    /* Borders */
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 216 12.2% 83.9%;
+    
+    /* Chart colors for dark mode */
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+/* Base Styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Improved scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-border;
+    opacity: 0.8;
+  }
+  
+  /* Focus styles */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+  }
+  
+  /* Text rendering optimization */
+  .text-optimize {
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1;
+    font-kerning: auto;
+  }
+}
+
+/* Custom Component Styles */
+@layer components {
+  /* Dashboard Layout - More sophisticated */
+  .dashboard-container {
+    @apply min-h-screen bg-background;
+  }
+  
+  .dashboard-header {
+    @apply bg-card/95 backdrop-blur-sm border-b border-border;
+    @apply shadow-sm;
+  }
+  
+  .dashboard-sidebar {
+    @apply bg-card/95 backdrop-blur-sm border-r border-border;
+    @apply shadow-sm;
+  }
+  
+  .dashboard-main {
+    @apply bg-background;
+  }
+  
+  /* Enhanced Card Styles - Following inspiration images */
+  .nutrition-card {
+    @apply bg-card border border-border rounded-xl shadow-sm;
+    @apply hover:shadow-md transition-all duration-200;
+    @apply backdrop-blur-sm;
+  }
+  
+  .nutrition-card-header {
+    @apply bg-muted/30 border-b border-border;
+    @apply rounded-t-xl;
+  }
+  
+  /* Nutrition Badge Styles - More professional */
+  .nutrition-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply border shadow-sm;
+  }
+  
+  .nutrition-badge-calories {
+    @apply bg-amber-50 text-amber-700 border-amber-200;
+    @apply dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800;
+  }
+  
+  .nutrition-badge-protein {
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+    @apply dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800;
+  }
+  
+  .nutrition-badge-carbs {
+    @apply bg-blue-50 text-blue-700 border-blue-200;
+    @apply dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800;
+  }
+  
+  .nutrition-badge-fat {
+    @apply bg-red-50 text-red-700 border-red-200;
+    @apply dark:bg-red-950 dark:text-red-300 dark:border-red-800;
+  }
+  
+  .nutrition-badge-fiber {
+    @apply bg-purple-50 text-purple-700 border-purple-200;
+    @apply dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800;
+  }
+  
+  .nutrition-badge-sodium {
+    @apply bg-orange-50 text-orange-700 border-orange-200;
+    @apply dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800;
+  }
+  
+  /* Form enhancements */
+  .form-field {
+    @apply bg-background border border-input rounded-lg shadow-sm;
+    @apply focus-within:ring-2 focus-within:ring-ring focus-within:border-ring;
+    @apply transition-all duration-200;
+  }
+  
+  /* Loading states */
+  .loading-shimmer {
+    @apply animate-pulse bg-gradient-to-r from-muted via-muted/70 to-muted;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
+  /* Professional interactions */
+  .interactive-element {
+    @apply transition-all duration-200 ease-out;
+    @apply hover:scale-[1.01] active:scale-[0.99];
+  }
+  
+  /* Responsive typography - Better hierarchy */
+  .heading-xl {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground;
+  }
+  
+  .heading-lg {
+    @apply text-2xl sm:text-3xl font-semibold tracking-tight text-foreground;
+  }
+  
+  .heading-md {
+    @apply text-xl sm:text-2xl font-semibold text-foreground;
+  }
+  
+  .heading-sm {
+    @apply text-lg sm:text-xl font-medium text-foreground;
+  }
+  
+  .body-lg {
+    @apply text-base sm:text-lg leading-relaxed text-foreground;
+  }
+  
+  .body-md {
+    @apply text-sm sm:text-base leading-relaxed text-muted-foreground;
+  }
+  
+  .body-sm {
+    @apply text-xs sm:text-sm leading-relaxed text-muted-foreground;
+  }
+} 
