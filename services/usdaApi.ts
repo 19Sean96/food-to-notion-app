@@ -121,16 +121,20 @@ export const processFoodDetails = (foodDetails: FoodDetailsResponse): ProcessedF
     }
   }
 
+  const isFoundational =
+    foodDetails.dataType && foodDetails.dataType.toLowerCase().includes('foundation');
+
   // Initialize the processed food item
   const processed: ProcessedFoodItem = {
     id: foodDetails.fdcId,
     description: foodDetails.description,
     brandOwner: foodDetails.brandOwner,
     brandName: foodDetails.brandName,
+    dataType: isFoundational ? 'Foundational' : 'Branded',
     foodCategory,
     ingredients: foodDetails.ingredients,
-    servingSize: foodDetails.servingSize,
-    servingSizeUnit: foodDetails.servingSizeUnit,
+    servingSize: foodDetails.servingSize ?? (isFoundational ? 100 : undefined),
+    servingSizeUnit: foodDetails.servingSizeUnit ?? (isFoundational ? 'g' : undefined),
     nutrients: {
       calories,
       energyKj: findNutrientValue(nutrients, NUTRIENT_IDS.ENERGY_KJ),

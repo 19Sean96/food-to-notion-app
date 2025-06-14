@@ -40,6 +40,12 @@ export async function POST(request: Request) {
             text: { content: servingSize }
           }]
         },
+        "Data Type": {
+          select: { name: food.dataType || 'Foundational' }
+        },
+        "Brand Name": {
+          rich_text: food.brandName ? [{ text: { content: food.brandName } }] : []
+        },
         "FDC ID": {
           number: food.id || 0
         },
