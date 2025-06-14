@@ -56,8 +56,8 @@ export const NotionSettings: React.FC<NotionSettingsProps> = ({
         <Button
             onClick={handleLoadDatabase}
             disabled={disabled || loading || !databaseId.trim()}
-            variant="primary"
-            size="md"
+            variant="default"
+            size="default"
         >
             {loading ? (
             <>

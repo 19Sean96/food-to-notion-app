@@ -104,18 +104,25 @@ export const FoodSearchForm: React.FC<FoodSearchFormProps> = ({
           size="sm"
           onClick={onAddQuery}
           disabled={loading}
-          icon={<Plus size={16} />}
         >
+          <Plus size={16} />
           Add Another Food
         </Button>
         <Button
           type="submit"
-          variant="primary"
+          variant="default"
           size="lg"
-          isLoading={loading}
-          icon={<Search size={16} />}
+          disabled={loading}
         >
-          {loading ? 'Searching...' : 'Search Foods'}
+          {loading ? (
+            <>
+              <Search size={16} className="animate-spin" /> Searching...
+            </>
+          ) : (
+            <>
+              <Search size={16} /> Search Foods
+            </>
+          )}
         </Button>
       </div>
     </form>
