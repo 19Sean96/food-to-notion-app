@@ -100,6 +100,7 @@ export interface ProcessedFoodItem {
   description: string;
   brandOwner?: string;
   brandName?: string;
+  dataType?: DataType;
   foodCategory?: string;
   ingredients?: string;
   servingSize?: number;
@@ -184,7 +185,7 @@ export interface FeedbackMessage {
   details?: string;
 }
 
-export type DataType = 'Foundation' | 'Branded';
+export type DataType = 'Foundational' | 'Branded';
 
 export interface DataTypeFilter {
   foundation: boolean;
