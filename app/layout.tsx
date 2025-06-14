@@ -4,11 +4,19 @@ import "./globals.css";
 import { ReactNode } from "react";
 import Providers from "../components/providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
-  title: "USDA Food Nutrition Data Aggregator with Notion Integration",
-  description: "Search for foods to view nutrition information and save to Notion",
+  title: "Food Nutrition Data Aggregator | Professional Nutrition Management",
+  description: "Professional nutrition data management with USDA FoodData Central integration and seamless Notion workflow",
+  keywords: ["nutrition", "food data", "USDA", "notion", "health tracking"],
+  authors: [{ name: "Food Nutrition Team" }],
+  viewport: "width=device-width, initial-scale=1",
 };
 
 export default function RootLayout({
@@ -17,8 +25,8 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className={inter.variable}>
+      <body className={`${inter.className} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

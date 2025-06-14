@@ -1,17 +1,31 @@
 'use client';
 
-import React from 'react';
-import { FoodResultsList } from '@/components/FoodResultsList';
+import React, { useState, useEffect } from 'react';
+import { FoodCard } from '@/components/FoodCard';
+import { NavigationSidebar } from '@/components/NavigationSidebar';
+import { SearchModal } from '@/components/SearchModal';
+import { NotionSetupModal } from '@/components/NotionSetupModal';
 import { useFoodSearch } from '@/hooks/useFoodSearch';
 import { useNotionIntegration } from '@/hooks/useNotionIntegration';
-import { ProcessedFoodItem } from '@/types';
-import { Sidebar } from '@/components/Sidebar';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { PanelLeftClose, PanelRightClose } from 'lucide-react';
+import { toast } from 'sonner';
+import { 
+  Search, 
+  Database, 
+  TrendingUp, 
+  Settings,
+  BarChart3,
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
+import { getNotionDatabaseInfo } from '@/services/notionApi';
 
 export default function Home() {
-  const [notionDatabaseId, setNotionDatabaseId] = React.useState('');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [notionModalOpen, setNotionModalOpen] = useState(false);
+  const [notionDatabaseId, setNotionDatabaseId] = useState('');
 
   const {
     queries,
@@ -34,94 +48,227 @@ export default function Home() {
     savingItems
   } = useNotionIntegration(notionDatabaseId);
 
-  const handleSaveToNotion = async (food: ProcessedFoodItem) => {
-    if (!notionDatabaseId) {
-        // This can also be a toast notification for consistency
-        alert('Please enter a Notion database ID first');
-        return;
-    }
+  // Database connection state
+  const [databaseInfo, setDatabaseInfo] = useState<any>(null);
+  const [databaseLoading, setDatabaseLoading] = useState(false);
+  
+  const handleLoadDatabase = async () => {
+    if (!notionDatabaseId.trim()) return;
+    
+    setDatabaseLoading(true);
+    try {
+      // Fetch real database information from the backend service
+      const info = await getNotionDatabaseInfo(notionDatabaseId);
 
+      // Map API response to UI-friendly shape
+      const mapped = {
+        name: info.title || 'Notion Database',
+        totalPages: info.pageCount ?? 0,
+        properties: info.properties?.map((p: { name: string }) => p.name) || [],
+      };
+
+      setDatabaseInfo(mapped);
+
+      // Optionally update saved FDC IDs for duplicate checks
+      // const ids = await getExistingFdcIds(notionDatabaseId);
+      // ids.forEach(id => addExistingFdcId(id));
+    } catch (error) {
+      console.error('Failed to load database:', error);
+      toast.error('Failed to connect to Notion database', {
+        description: error instanceof Error ? error.message : 'An unknown error occurred.',
+      });
+      setDatabaseInfo(null);
+    } finally {
+      setDatabaseLoading(false);
+    }
+  };
+
+  const handleSaveFood = async (food: any) => {
     const success = await saveToNotion(food);
     if (success) {
-        addExistingFdcId(food.id);
+      addExistingFdcId(food.id);
     }
   };
 
-  const notionSettingsProps = {
-    databaseId: notionDatabaseId,
-    onDatabaseIdChange: setNotionDatabaseId,
-    disabled: loading,
+  const handleSearch = async () => {
+    const activeQueries = queries.filter(q => q.text.trim());
+    if (activeQueries.length === 0) {
+      toast.error('Please enter at least one search term');
+      return;
+    }
+    
+    setSearchModalOpen(false); // Close modal immediately
+    
+    try {
+      await searchAllFoods();
+      
+      // Show success toast after search completes
+      setTimeout(() => {
+        const totalResults = results.reduce((sum, result) => sum + result.foods.length, 0);
+        if (totalResults > 0) {
+          toast.success(`Found ${totalResults} food items matching your search`);
+        } else {
+          toast.info('No results found for your search terms');
+        }
+      }, 500);
+    } catch (error) {
+      toast.error('Search failed. Please try again.');
+    }
   };
 
-  const foodSearchFormProps = {
-    queries,
-    loading,
-    dataTypeFilter,
-    onAddQuery: addQuery,
-    onRemoveQuery: removeQuery,
-    onUpdateQuery: updateQuery,
-    onUpdateDataTypeFilter: updateDataTypeFilter,
-    onSearch: searchAllFoods,
-  };
+  const totalSearches = queries.filter(q => q.text.trim()).length;
+  const totalResults = results.reduce((sum, result) => sum + result.foods.length, 0);
+  const totalSaved = existingFdcIds.size;
+  const notionConnected = !!databaseInfo;
+
+  // Surface feedback messages through toast notifications instead of inline banners
+  useEffect(() => {
+    if (feedbackMessage) {
+      const { type, message, details } = feedbackMessage;
+      const options = details ? { description: details } : undefined;
+      switch (type) {
+        case 'success':
+          toast.success(message, options);
+          break;
+        case 'error':
+          toast.error(message, options);
+          break;
+        default:
+          toast.info(message, options);
+      }
+      // Clear the message after showing so it doesn't re-trigger
+      setFeedbackMessage(null);
+    }
+  }, [feedbackMessage, setFeedbackMessage]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-4 flex items-center justify-between">
-                <div className="flex items-center">
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                        className="mr-2"
-                        aria-label="Toggle sidebar"
-                    >
-                        {isSidebarCollapsed ? <PanelRightClose size={20} /> : <PanelLeftClose size={20} />}
-                    </Button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Food Nutrition Data Aggregator</h1>
-                        <p className="mt-1 text-xs text-gray-600">
-                            Search for foods to view nutrition information and save to Notion
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <div className="flex h-screen">
+        {/* Navigation Sidebar */}
+        <NavigationSidebar
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onOpenSearch={() => setSearchModalOpen(true)}
+          onOpenNotionSetup={() => setNotionModalOpen(true)}
+          notionConnected={notionConnected}
+        />
 
-      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row">
-            <Sidebar 
-                notionSettingsProps={notionSettingsProps}
-                foodSearchFormProps={foodSearchFormProps}
-                isCollapsed={isSidebarCollapsed}
-            />
-          
-            <div className="flex-1 mt-8 lg:mt-0">
-                {feedbackMessage && (
-                <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-lg">
-                    {feedbackMessage.message}
-                </div>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          {/* Header with Quick Actions */}
+          <header className="bg-card border-b border-border px-8 py-4 flex-shrink-0">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Nutrition Hub</h1>
+                <p className="text-muted-foreground mt-1">Professional nutrition data management</p>
+              </div>
+              <div className="flex items-center gap-4">
+                {notionConnected && databaseInfo && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium">
+                    <CheckCircle className="w-4 h-4" />
+                    {databaseInfo.name} is connected
+                  </div>
                 )}
-                
-                <FoodResultsList
-                results={results}
-                savingItems={savingItems}
-                onSaveToNotion={handleSaveToNotion}
-                existingFdcIds={existingFdcIds}
-                />
+                <Button variant="ghost" size="icon">
+                  <Settings className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
-        </div>
-      </main>
+            
+            {/* Quick Actions Row */}
+            <div className="flex gap-4">
+              <Button onClick={() => setSearchModalOpen(true)}>
+                <Search className="w-4 h-4" />
+                Search Foods
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setNotionModalOpen(true)}
+              >
+                <Database className="w-4 h-4" />
+                {notionConnected ? 'Manage Database' : 'Setup Notion'}
+              </Button>
+            </div>
+          </header>
 
-      <footer className="bg-white border-t">
-        <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <p className="text-sm text-gray-500 text-center">
-            Data provided by USDA FoodData Central API. 
-          </p>
+          {/* Content Area */}
+          <div className="flex-1 px-4 py-6 overflow-y-auto">
+            {/* Results Section */}
+            {results.length > 0 ? (
+              <div className="h-full flex flex-col">
+                <div className="flex-1">
+                  <div className="h-full overflow-y-auto space-y-6 pb-8 px-3">
+                    {results.map((result, index) => (
+                      <div key={index}>
+                        {/* Query Header */}
+                        <div className="flex items-center gap-4 mb-4">
+                          <h2 className="text-xl font-bold">
+                            Results for "{result.queryText}"
+                          </h2>
+                          <div className="text-sm text-muted-foreground">
+                            {result.foods.length} items found
+                          </div>
+                        </div>
+                        
+                        {/* Food Cards for this query */}
+                        <div className="space-y-4 mb-6">
+                          {result.foods.map((food) => (
+                            <FoodCard
+                              key={food.fdcId}
+                              food={food}
+                              isSaving={savingItems[food.fdcId] || false}
+                              onSaveToNotion={handleSaveFood}
+                              isAlreadyInNotion={existingFdcIds.has(food.fdcId)}
+                            />
+                          ))}
+                        </div>
+                        
+                        {/* Divider between queries (except for last one) */}
+                        {index < results.length - 1 && (
+                          <div className="border-t border-border my-6"></div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center">
+                <Database className="w-16 h-16 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Start Your Nutrition Search</h3>
+                <p className="text-muted-foreground max-w-md">
+                  Use the navigation sidebar to search for food items and discover detailed nutrition information from the USDA database.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </footer>
+      </div>
+
+      {/* Modals */}
+             <SearchModal
+         isOpen={searchModalOpen}
+         onClose={() => setSearchModalOpen(false)}
+         queries={queries}
+         loading={loading}
+         dataTypeFilter={dataTypeFilter}
+         onAddQuery={addQuery}
+         onRemoveQuery={removeQuery}
+         onUpdateQuery={updateQuery}
+         onUpdateDataTypeFilter={updateDataTypeFilter}
+         onSearch={handleSearch}
+       />
+
+             <NotionSetupModal
+         isOpen={notionModalOpen}
+         onClose={() => setNotionModalOpen(false)}
+         databaseId={notionDatabaseId}
+         onDatabaseIdChange={setNotionDatabaseId}
+         onLoadDatabase={handleLoadDatabase}
+         loading={databaseLoading}
+         databaseInfo={databaseInfo}
+         connected={notionConnected}
+       />
     </div>
   );
 } 
