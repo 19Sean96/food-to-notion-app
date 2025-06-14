@@ -45,19 +45,19 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
   // Show loading state while fetching details
   if (isLoading) {
     return (
-      <Card className="h-full flex flex-col transition-all duration-200 hover:shadow-lg">
+      <Card className="nutrition-card interactive-element">
         <CardHeader>
           <CardTitle className="line-clamp-2">{getStringValue(food.description)}</CardTitle>
           
-          <div className="flex flex-wrap gap-2 mt-1">
+          <div className="flex flex-wrap gap-2 mt-2">
             {food.brandName && (
-              <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+              <span className="nutrition-badge nutrition-badge-protein">
                 {getStringValue(food.brandName)}
               </span>
             )}
             
             {food.foodCategory && (
-              <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">
+              <span className="nutrition-badge bg-secondary text-secondary-foreground border-border">
                 {getStringValue(food.foodCategory)}
               </span>
             )}
@@ -70,9 +70,9 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
         
         <CardContent className="flex-1 flex items-center justify-center">
           <div className="text-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500" />
-            <p className="text-gray-600 font-medium">Loading nutrition data...</p>
-            <p className="text-sm text-gray-500 mt-1">Fetching detailed information</p>
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="font-medium">Loading nutrition data...</p>
+            <p className="text-sm text-muted-foreground mt-1">Fetching detailed information</p>
           </div>
         </CardContent>
         
@@ -81,8 +81,8 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
             variant="outline"
             size="sm"
             disabled
-            icon={<Loader2 className="animate-spin" size={16} />}
           >
+            <Loader2 className="animate-spin w-4 h-4" />
             Loading...
           </Button>
         </CardFooter>
@@ -95,19 +95,19 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     
     return (
-      <Card className="h-full flex flex-col transition-all duration-200 hover:shadow-lg border-red-200">
+      <Card className="nutrition-card border-destructive/50">
         <CardHeader>
           <CardTitle className="line-clamp-2">{getStringValue(food.description)}</CardTitle>
           
-          <div className="flex flex-wrap gap-2 mt-1">
+          <div className="flex flex-wrap gap-2 mt-2">
             {food.brandName && (
-              <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+              <span className="nutrition-badge nutrition-badge-protein">
                 {getStringValue(food.brandName)}
               </span>
             )}
             
             {food.foodCategory && (
-              <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">
+              <span className="nutrition-badge bg-secondary text-secondary-foreground border-border">
                 {getStringValue(food.foodCategory)}
               </span>
             )}
@@ -120,9 +120,9 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
         
         <CardContent className="flex-1 flex items-center justify-center">
           <div className="text-center py-8">
-            <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-500" />
-            <p className="text-red-600 font-medium">Failed to load nutrition data</p>
-            <p className="text-sm text-red-500 mt-1">
+            <AlertCircle className="h-8 w-8 mx-auto mb-4 text-destructive" />
+            <p className="font-medium text-destructive">Failed to load nutrition data</p>
+            <p className="text-sm text-muted-foreground mt-1">
               {errorMessage || 'Unable to fetch detailed information'}
             </p>
           </div>
@@ -133,8 +133,8 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
             variant="outline"
             size="sm"
             disabled
-            icon={<AlertCircle size={16} />}
           >
+            <AlertCircle className="w-4 h-4" />
             Error Loading Data
           </Button>
         </CardFooter>
@@ -155,25 +155,26 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
   const displayCalories = hasValidCalories ? calories.toFixed(1) : 'N/A';
 
   return (
-    <Card className="h-full flex flex-col transition-all duration-200 hover:shadow-lg">
+    <Card className="nutrition-card interactive-element">
       {isAlreadyInNotion && (
-        <div className="flex items-center gap-2 bg-green-50 text-green-800 text-sm font-medium px-4 py-2 border-b">
-          <CheckCircle size={16} />
+        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 text-sm font-medium px-4 py-2 border-b border-emerald-200 rounded-t-xl">
+          <CheckCircle className="w-4 h-4" />
           <span>Already saved to Notion</span>
         </div>
       )}
+      
       <CardHeader>
         <CardTitle className="line-clamp-2">{getStringValue(detailedFood.description)}</CardTitle>
         
-        <div className="flex flex-wrap gap-2 mt-1">
+        <div className="flex flex-wrap gap-2 mt-2">
           {detailedFood.brandName && (
-            <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+            <span className="nutrition-badge nutrition-badge-protein">
               {getStringValue(detailedFood.brandName)}
             </span>
           )}
           
           {detailedFood.foodCategory && (
-            <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">
+            <span className="nutrition-badge bg-secondary text-secondary-foreground border-border">
               {getStringValue(detailedFood.foodCategory)}
             </span>
           )}
@@ -186,201 +187,121 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="flex-1">
-        {/* Macronutrient overview */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="bg-blue-50 p-3 rounded-md">
-            <p className="text-sm text-blue-800 font-medium">Calories</p>
-            <p className="text-lg font-bold text-blue-900">
-              {hasValidCalories ? `${displayCalories} kcal` : 'N/A'}
-            </p>
-          </div>
-          <div className="bg-green-50 p-3 rounded-md">
-            <p className="text-sm text-green-800 font-medium">Protein</p>
-            <p className="text-lg font-bold text-green-900">{formatNutrient(nutrients.protein, 'g')}</p>
-          </div>
-          <div className="bg-amber-50 p-3 rounded-md">
-            <p className="text-sm text-amber-800 font-medium">Carbs</p>
-            <p className="text-lg font-bold text-amber-900">{formatNutrient(nutrients.carbs.total, 'g')}</p>
-          </div>
-          <div className="bg-red-50 p-3 rounded-md">
-            <p className="text-sm text-red-800 font-medium">Fat</p>
-            <p className="text-lg font-bold text-red-900">{formatNutrient(nutrients.fats.total, 'g')}</p>
-          </div>
-        </div>
-        
-        {/* Detailed nutrition table */}
-        {showDetails && (
-          <div className="mt-4 border-t pt-4">
-            <h4 className="text-sm font-semibold mb-2">Detailed Nutrition Information</h4>
-            
-            {/* Foundational Data */}
-            <div className="space-y-4">
-              <div>
-                <h5 className="text-sm font-medium text-gray-700 mb-2">Foundational Data</h5>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span className="text-gray-600">Calories</span>
-                  <span className="font-medium text-gray-900">
-                    {hasValidCalories ? `${displayCalories} kcal` : 'N/A'}
-                  </span>
-                  
-                  <span className="text-gray-600">Water</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.water, 'g')}</span>
-                  
-                  {/* Carbohydrate breakdown */}
-                  <span className="text-gray-600">Total Carbs</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.carbs.total, 'g')}</span>
-                  
-                  <span className="text-gray-600">Dietary Fiber</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.carbs.fiber, 'g')}</span>
-                  
-                  <span className="text-gray-600">Total Sugars</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.carbs.sugar, 'g')}</span>
-                  
-                  <span className="text-gray-600">Added Sugars</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.carbs.addedSugar, 'g')}</span>
-                  
-                  {/* Fat breakdown */}
-                  <span className="text-gray-600">Total Fat</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.fats.total, 'g')}</span>
-                  
-                  <span className="text-gray-600">Saturated Fat</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.fats.saturated, 'g')}</span>
-                  
-                  <span className="text-gray-600">Trans Fat</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.fats.trans, 'g')}</span>
-                  
-                  <span className="text-gray-600">Cholesterol</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.cholesterol, 'mg')}</span>
-                </div>
-              </div>
-              
-              {/* Core Micronutrients */}
-              <div>
-                <h5 className="text-sm font-medium text-gray-700 mb-2">Core Micronutrients</h5>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span className="text-gray-600">Vitamin A</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.vitamins.a, 'µg')}</span>
-                  
-                  <span className="text-gray-600">Vitamin D</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.vitamins.d, 'µg')}</span>
-                  
-                  <span className="text-gray-600">Vitamin E</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.vitamins.e, 'mg')}</span>
-                  
-                  <span className="text-gray-600">Vitamin K</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.vitamins.k, 'µg')}</span>
-                  
-                  <span className="text-gray-600">Vitamin B6</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.vitamins.b6, 'mg')}</span>
-                  
-                  <span className="text-gray-600">Vitamin B12</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.vitamins.b12, 'µg')}</span>
-                  
-                  <span className="text-gray-600">Folate (DFE)</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.vitamins.folate, 'µg')}</span>
-                  
-                  <span className="text-gray-600">Calcium</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.micronutrients.calcium, 'mg')}</span>
-                  
-                  <span className="text-gray-600">Iron</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.micronutrients.iron, 'mg')}</span>
-                  
-                  <span className="text-gray-600">Magnesium</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.micronutrients.magnesium, 'mg')}</span>
-                  
-                  <span className="text-gray-600">Zinc</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.micronutrients.zinc, 'mg')}</span>
-                  
-                  <span className="text-gray-600">Iodine</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.micronutrients.iodine, 'µg')}</span>
-                  
-                  <span className="text-gray-600">Sodium</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.micronutrients.sodium, 'mg')}</span>
-                  
-                  <span className="text-gray-600">Potassium</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.micronutrients.potassium, 'mg')}</span>
-                </div>
-              </div>
-              
-              {/* Functional Clinical Data */}
-              <div>
-                <h5 className="text-sm font-medium text-gray-700 mb-2">Functional Clinical Data</h5>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span className="text-gray-600">MUFA</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.fats.mufa, 'g')}</span>
-                  
-                  <span className="text-gray-600">PUFA</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.fats.pufa, 'g')}</span>
-                  
-                  <span className="text-gray-600">Omega-3 ALA</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.fats.omega3.ala, 'g')}</span>
-                  
-                  <span className="text-gray-600">Omega-3 EPA</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.fats.omega3.epa, 'g')}</span>
-                  
-                  <span className="text-gray-600">Omega-3 DHA</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.fats.omega3.dha, 'g')}</span>
-                  
-                  <span className="text-gray-600">Leucine</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.aminoAcids.leucine, 'g')}</span>
-                  
-                  <span className="text-gray-600">Lysine</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.aminoAcids.lysine, 'g')}</span>
-                  
-                  <span className="text-gray-600">Methionine</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.aminoAcids.methionine, 'g')}</span>
-                  
-                  <span className="text-gray-600">Cystine</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.aminoAcids.cystine, 'g')}</span>
-                  
-                  <span className="text-gray-600">Choline</span>
-                  <span className="font-medium text-gray-900">{formatNutrient(nutrients.choline, 'mg')}</span>
-                </div>
-              </div>
+      <CardContent className="flex-1 space-y-4">
+        {/* Macronutrient overview with consistent styling */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="nutrition-card-header p-3 rounded-lg">
+            <p className="text-sm font-medium text-foreground">Calories</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl font-bold text-nutrition-calories">
+                {hasValidCalories ? displayCalories : 'N/A'}
+              </span>
+              {hasValidCalories && (
+                <span className="text-sm font-medium text-nutrition-calories/80">kcal</span>
+              )}
             </div>
           </div>
-        )}
+          <div className="nutrition-card-header p-3 rounded-lg">
+            <p className="text-sm font-medium text-foreground">Protein</p>
+            <p className="text-xl font-bold text-nutrition-protein">{formatNutrient(nutrients.protein, 'g')}</p>
+          </div>
+        </div>
 
-        {/* Raw JSON Data */}
-        {showRawJson && (
-          <div className="mt-4 border-t pt-4">
-            <h4 className="text-sm font-semibold mb-2">Raw JSON Data</h4>
-            <pre className="text-xs bg-gray-50 p-4 rounded-md overflow-auto max-h-96">
-              {JSON.stringify(detailedFood, null, 2)}
-            </pre>
+        {/* Secondary nutrients */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 bg-muted/30 rounded-lg">
+            <p className="text-sm font-medium text-foreground">Carbs</p>
+            <p className="text-xl font-bold text-nutrition-carbs">{formatNutrient(nutrients.carbs.total, 'g')}</p>
+          </div>
+          <div className="p-3 bg-muted/30 rounded-lg">
+            <p className="text-sm font-medium text-foreground">Fat</p>
+            <p className="text-xl font-bold text-nutrition-fat">{formatNutrient(nutrients.fats.total, 'g')}</p>
+          </div>
+        </div>
+
+        {/* Expandable detailed nutrition */}
+        {showDetails && (
+          <div className="space-y-3 pt-3 border-t border-border">
+            <h4 className="font-semibold text-sm">Detailed Nutrition Information</h4>
+            
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              <div className="flex justify-between items-center py-1">
+                <span className="text-muted-foreground">Dietary Fiber</span>
+                <span className="font-medium">{formatNutrient(nutrients.carbs.fiber, 'g')}</span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-muted-foreground">Total Sugars</span>
+                <span className="font-medium">{formatNutrient(nutrients.carbs.sugar, 'g')}</span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-muted-foreground">Saturated Fat</span>
+                <span className="font-medium">{formatNutrient(nutrients.fats.saturated, 'g')}</span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-muted-foreground">Sodium</span>
+                <span className="font-medium">{formatNutrient(nutrients.micronutrients.sodium, 'mg')}</span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-muted-foreground">Cholesterol</span>
+                <span className="font-medium">{formatNutrient(nutrients.cholesterol, 'mg')}</span>
+              </div>
+            </div>
+
+            {/* Raw JSON toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleRawJson}
+              className="w-full mt-3"
+            >
+              <Info className="w-4 h-4" />
+              {showRawJson ? 'Hide' : 'Show'} Raw Data
+            </Button>
+
+            {showRawJson && (
+              <div className="mt-3 p-3 bg-muted rounded-lg">
+                <pre className="text-xs overflow-auto max-h-40 text-muted-foreground">
+                  {JSON.stringify(detailedFood, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
       
       <CardFooter className="gap-2">
-        <Button 
+        <Button
           variant="outline"
           size="sm"
           onClick={toggleDetails}
-          icon={showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          className="flex-1"
         >
-          {showDetails ? 'Hide Details' : 'View Details'}
-        </Button>
-
-        <Button 
-          variant="outline"
-          size="sm"
-          onClick={toggleRawJson}
-          icon={showRawJson ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        >
-          {showRawJson ? 'Hide Raw JSON' : 'View Raw JSON'}
+          {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {showDetails ? 'Less Info' : 'More Info'}
         </Button>
         
         <Button
-          variant="success"
-          size="sm"
           onClick={() => onSaveToNotion(detailedFood)}
-          isLoading={isSaving}
-          disabled={isAlreadyInNotion || isSaving}
-          icon={<Save size={16} />}
+          disabled={isSaving || isAlreadyInNotion}
+          size="sm"
+          className="flex-1"
         >
-          {isAlreadyInNotion ? 'Saved' : 'Save to Notion'}
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving...
+            </>
+          ) : isAlreadyInNotion ? (
+            <>
+              <CheckCircle className="w-4 h-4" />
+              Saved
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              Save to Notion
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>
