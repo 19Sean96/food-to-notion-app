@@ -4,6 +4,7 @@ import { FoodSearchItem, ProcessedFoodItem } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { formatUnit, formatNutrient } from '@/utils/formatters';
+import { scaleFoodItem, convertMeasurement } from '@/utils/scaling';
 import { useFoodDetails } from '@/hooks/useFoodDetails';
 
 interface FoodCardProps {
@@ -19,6 +20,20 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
 
   // Use React Query to fetch detailed food information
   const { data: detailedFood, isLoading, error } = useFoodDetails(food.fdcId);
+
+  // Editable state
+  const [title, setTitle] = React.useState('');
+  const [servingSize, setServingSize] = React.useState<number | undefined>(undefined);
+  const [servingUnit, setServingUnit] = React.useState<string | undefined>(undefined);
+
+  // Sync with fetched data
+  React.useEffect(() => {
+    if (detailedFood) {
+      setTitle(detailedFood.description);
+      setServingSize(detailedFood.servingSize);
+      setServingUnit(detailedFood.servingSizeUnit);
+    }
+  }, [detailedFood]);
 
   const toggleDetails = () => {
     setShowDetails(!showDetails);
@@ -147,12 +162,30 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
     return null;
   }
 
-  const nutrients = detailedFood.nutrients;
+  const editedFood = React.useMemo(() => {
+    if (!detailedFood) return null;
+    if (servingSize && servingUnit) {
+      return scaleFoodItem(
+        { ...detailedFood, description: title, servingSize, servingSizeUnit: servingUnit },
+        servingSize
+      );
+    }
+    return { ...detailedFood, description: title };
+  }, [detailedFood, servingSize, servingUnit, title]);
+
+  const nutrients = editedFood!.nutrients;
 
   // Format calories with one decimal place
-  const calories = detailedFood.nutrients.calories;
+  const calories = nutrients.calories;
   const hasValidCalories = calories > 0;
   const displayCalories = hasValidCalories ? calories.toFixed(1) : 'N/A';
+
+  const dual = React.useMemo(() => {
+    if (!servingSize || !servingUnit) return null;
+    const conv = convertMeasurement(servingSize, servingUnit);
+    if (!conv) return null;
+    return `${conv.value.toFixed(1)} ${formatUnit(conv.unit)}`;
+  }, [servingSize, servingUnit]);
 
   return (
     <Card className="nutrition-card interactive-element">
@@ -164,9 +197,14 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
       )}
       
       <CardHeader>
-        <CardTitle className="line-clamp-2">{getStringValue(detailedFood.description)}</CardTitle>
-        
-        <div className="flex flex-wrap gap-2 mt-2">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full text-lg font-semibold bg-background border border-input rounded-md px-2 py-1 mb-2"
+        />
+
+        <div className="flex flex-wrap gap-2 mb-2">
           {detailedFood.brandName && (
             <span className="nutrition-badge nutrition-badge-protein">
               {getStringValue(detailedFood.brandName)}
@@ -180,11 +218,28 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
           )}
         </div>
         
-        <CardDescription>
-          Serving size: {detailedFood.servingSize && detailedFood.servingSizeUnit
-            ? `${detailedFood.servingSize}${formatUnit(detailedFood.servingSizeUnit)}`
-            : servingInfo}
-        </CardDescription>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">Serving size:</span>
+          <input
+            type="number"
+            value={servingSize ?? ''}
+            onChange={(e) => setServingSize(parseFloat(e.target.value) || 0)}
+            className="w-24 bg-background border border-input rounded-md px-2 py-1"
+          />
+          <select
+            value={servingUnit}
+            onChange={(e) => setServingUnit(e.target.value)}
+            className="bg-background border border-input rounded-md px-2 py-1"
+          >
+            <option value="g">g</option>
+            <option value="oz">oz</option>
+            <option value="ml">ml</option>
+            <option value="fl oz">fl oz</option>
+            <option value="cup">cup</option>
+            <option value="l">L</option>
+          </select>
+          {dual && <span className="text-sm text-muted-foreground">(~{dual})</span>}
+        </div>
       </CardHeader>
       
       <CardContent className="flex-1 space-y-4">
@@ -281,7 +336,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
         </Button>
         
         <Button
-          onClick={() => onSaveToNotion(detailedFood)}
+          onClick={() => onSaveToNotion(editedFood!)}
           disabled={isSaving || isAlreadyInNotion}
           size="sm"
           className="flex-1"
