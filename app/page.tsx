@@ -27,6 +27,19 @@ export default function Home() {
   const [notionModalOpen, setNotionModalOpen] = useState(false);
   const [notionDatabaseId, setNotionDatabaseId] = useState('');
 
+  // Load saved DB ID
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('notionDatabaseId') : null;
+    if (saved) setNotionDatabaseId(saved);
+  }, []);
+
+  // Persist DB ID
+  useEffect(() => {
+    if (notionDatabaseId) {
+      localStorage.setItem('notionDatabaseId', notionDatabaseId);
+    }
+  }, [notionDatabaseId]);
+
   const {
     queries,
     results,
