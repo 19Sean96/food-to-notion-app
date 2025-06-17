@@ -1,33 +1,24 @@
 import React from 'react';
-import { Save, Info, ChevronDown, ChevronUp, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Save, Info, ChevronDown, ChevronUp, Loader2, AlertCircle, CheckCircle, Edit2 } from 'lucide-react';
 import { FoodSearchItem, ProcessedFoodItem } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
-import { formatUnit, formatNutrient } from '@/utils/formatters';
+import { formatNutrient } from '@/utils/formatters';
 import { useFoodDetails } from '@/hooks/useFoodDetails';
+import { ServingSizeSelector } from '@/components/ServingSizeSelector';
+import { Unit, toMetric, toImperial } from '@/lib/conversion';
+import { scaleFoodItem } from '@/lib/nutrientScaling';
 
 interface FoodCardProps {
   food: FoodSearchItem;
   isSaving: boolean;
   onSaveToNotion: (food: ProcessedFoodItem) => void;
   isAlreadyInNotion: boolean;
+  notionPageId?: string;
+  updatePage?: (food: ProcessedFoodItem, pageId: string) => Promise<boolean>;
 }
 
-export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNotion, isAlreadyInNotion }) => {
-  const [showDetails, setShowDetails] = React.useState(false);
-  const [showRawJson, setShowRawJson] = React.useState(false);
-
-  // Use React Query to fetch detailed food information
-  const { data: detailedFood, isLoading, error } = useFoodDetails(food.fdcId);
-
-  const toggleDetails = () => {
-    setShowDetails(!showDetails);
-  };
-
-  const toggleRawJson = () => {
-    setShowRawJson(!showRawJson);
-  };
-
+export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNotion, isAlreadyInNotion, notionPageId, updatePage }) => {
   // Helper to safely get string values
   const getStringValue = (value: any): string => {
     if (typeof value === 'string') return value;
@@ -37,10 +28,120 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
     return '';
   };
 
-  // Basic serving info from search result
-  const servingInfo = food.servingSize && food.servingSizeUnit
-    ? `${food.servingSize}${formatUnit(food.servingSizeUnit)}`
-    : 'Not specified';
+  const [showDetails, setShowDetails] = React.useState(false);
+  const [showRawJson, setShowRawJson] = React.useState(false);
+
+  // Serving size state
+  const [servingQty, setServingQty] = React.useState<number>(food.servingSize || 1);
+  const [servingUnit, setServingUnit] = React.useState<Unit>((food.servingSizeUnit as Unit) || 'g');
+  const [showAsLabel, setShowAsLabel] = React.useState<string>('');
+
+  // Editable title state
+  const [editedTitle, setEditedTitle] = React.useState<string>(getStringValue(food.description));
+  const [isEditingTitle, setIsEditingTitle] = React.useState<boolean>(false);
+  const titleInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Use React Query to fetch detailed food information
+  const { data: detailedFood, isLoading, error } = useFoodDetails(food.fdcId);
+
+  // Update when detailedFood arrives
+  React.useEffect(() => {
+    if (detailedFood?.servingSize && detailedFood?.servingSizeUnit) {
+      setServingQty(detailedFood.servingSize);
+      setServingUnit(detailedFood.servingSizeUnit as Unit);
+    }
+  }, [detailedFood]);
+
+  // Sync title when detailed data loads
+  React.useEffect(() => {
+    if (detailedFood?.description) {
+      setEditedTitle(getStringValue(detailedFood.description));
+    }
+  }, [detailedFood]);
+
+  // Auto-focus input when editing starts
+  React.useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [isEditingTitle]);
+
+  // Track original values for update detection
+  const originalTitleRef = React.useRef<string>(getStringValue(food.description));
+  const originalQtyRef = React.useRef<number>(food.servingSize || 1);
+  const originalUnitRef = React.useRef<Unit>((food.servingSizeUnit as Unit) || 'g');
+  const originalShowAsRef = React.useRef<string>('');
+
+  // When detailedFood loaded, update originals
+  React.useEffect(() => {
+    if (detailedFood) {
+      originalTitleRef.current = getStringValue(detailedFood.description);
+      if (detailedFood.servingSize) originalQtyRef.current = detailedFood.servingSize;
+      if (detailedFood.servingSizeUnit) originalUnitRef.current = detailedFood.servingSizeUnit as Unit;
+    }
+  }, [detailedFood]);
+
+  // Determine if any editable fields have changed
+  const isDirty =
+    editedTitle !== originalTitleRef.current ||
+    servingQty !== originalQtyRef.current ||
+    servingUnit !== originalUnitRef.current ||
+    showAsLabel !== originalShowAsRef.current;
+
+  const toggleDetails = () => {
+    setShowDetails(!showDetails);
+  };
+
+  const toggleRawJson = () => {
+    setShowRawJson(!showRawJson);
+  };
+
+  type NutrientEntry = { label: string; value: number; unit: 'g' | 'mg' | 'µg' | 'kcal' };
+
+  const getAllNutrientEntries = (n: any): NutrientEntry[] => {
+    return [
+      { label: 'Calories', value: n.calories, unit: 'kcal' },
+      { label: 'Water', value: n.water, unit: 'g' },
+      { label: 'Protein', value: n.protein, unit: 'g' },
+      { label: 'Total Carbs', value: n.carbs.total, unit: 'g' },
+      { label: 'Dietary Fiber', value: n.carbs.fiber, unit: 'g' },
+      { label: 'Total Sugars', value: n.carbs.sugar, unit: 'g' },
+      { label: 'Added Sugar', value: n.carbs.addedSugar, unit: 'g' },
+      { label: 'Total Fat', value: n.fats.total, unit: 'g' },
+      { label: 'Saturated Fat', value: n.fats.saturated, unit: 'g' },
+      { label: 'Trans Fat', value: n.fats.trans, unit: 'g' },
+      { label: 'MUFA', value: n.fats.mufa, unit: 'g' },
+      { label: 'PUFA', value: n.fats.pufa, unit: 'g' },
+      { label: 'Omega-3 ALA', value: n.fats.omega3.ala, unit: 'g' },
+      { label: 'Omega-3 EPA', value: n.fats.omega3.epa, unit: 'g' },
+      { label: 'Omega-3 DHA', value: n.fats.omega3.dha, unit: 'g' },
+      { label: 'Cholesterol', value: n.cholesterol, unit: 'mg' },
+      { label: 'Sodium', value: n.micronutrients.sodium, unit: 'mg' },
+      { label: 'Potassium', value: n.micronutrients.potassium, unit: 'mg' },
+      { label: 'Calcium', value: n.micronutrients.calcium, unit: 'mg' },
+      { label: 'Iron', value: n.micronutrients.iron, unit: 'mg' },
+      { label: 'Magnesium', value: n.micronutrients.magnesium, unit: 'mg' },
+      { label: 'Phosphorus', value: n.micronutrients.phosphorus, unit: 'mg' },
+      { label: 'Zinc', value: n.micronutrients.zinc, unit: 'mg' },
+      { label: 'Iodine', value: n.micronutrients.iodine, unit: 'µg' },
+      { label: 'Selenium', value: n.micronutrients.selenium, unit: 'µg' },
+      { label: 'Copper', value: n.micronutrients.copper, unit: 'mg' },
+      { label: 'Vitamin A', value: n.vitamins.a, unit: 'µg' },
+      { label: 'Vitamin D', value: n.vitamins.d, unit: 'µg' },
+      { label: 'Vitamin E', value: n.vitamins.e, unit: 'mg' },
+      { label: 'Vitamin K', value: n.vitamins.k, unit: 'µg' },
+      { label: 'Vitamin B6', value: n.vitamins.b6, unit: 'mg' },
+      { label: 'Vitamin B12', value: n.vitamins.b12, unit: 'µg' },
+      { label: 'Folate', value: n.vitamins.folate, unit: 'µg' },
+      { label: 'Leucine', value: n.aminoAcids.leucine, unit: 'g' },
+      { label: 'Lysine', value: n.aminoAcids.lysine, unit: 'g' },
+      { label: 'Methionine', value: n.aminoAcids.methionine, unit: 'g' },
+      { label: 'Cystine', value: n.aminoAcids.cystine, unit: 'g' },
+      { label: 'Choline', value: n.choline, unit: 'mg' },
+    ];
+  };
+
+  // Basic serving info (not used in UI now)
 
   // Show loading state while fetching details
   if (isLoading) {
@@ -64,7 +165,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
           </div>
           
           <CardDescription>
-            Serving size: {servingInfo}
+            Serving size: {servingQty} {servingUnit}
           </CardDescription>
         </CardHeader>
         
@@ -114,7 +215,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
           </div>
           
           <CardDescription>
-            Serving size: {servingInfo}
+            Serving size: {servingQty} {servingUnit}
           </CardDescription>
         </CardHeader>
         
@@ -147,12 +248,38 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
     return null;
   }
 
-  const nutrients = detailedFood.nutrients;
+  // Scale nutrients based on edited serving
+  // Use original detailedFood to calculate scaling ratio, then override display fields
+  const baseScaledFood = scaleFoodItem(
+    detailedFood as any,
+    servingQty,
+    servingUnit
+  );
+  const scaledFood: ProcessedFoodItem = {
+    ...baseScaledFood,
+    description: editedTitle,
+    servingSizeDisplay: showAsLabel
+      ? `${showAsLabel} (${Number(servingQty.toFixed(2))} ${servingUnit})`
+      : `${Number(servingQty.toFixed(2))} ${servingUnit}`,
+  };
+
+  // Compute dual measurement units
+  const metric = toMetric(servingQty, servingUnit);
+  const imperial = toImperial(servingQty, servingUnit);
+  const scaledFoodWithDual = {
+    ...scaledFood,
+    servingSizeMetric: Number(metric.value.toFixed(2)),
+    servingSizeMetricUnit: metric.unit,
+    servingSizeImperial: Number(imperial.value.toFixed(2)),
+    servingSizeImperialUnit: imperial.unit,
+  };
+
+  const nutrients = scaledFood.nutrients;
 
   // Format calories with one decimal place
-  const calories = detailedFood.nutrients.calories;
+  const calories = scaledFood.nutrients.calories;
   const hasValidCalories = calories > 0;
-  const displayCalories = hasValidCalories ? calories.toFixed(1) : 'N/A';
+  const displayCalories = hasValidCalories ? calories.toFixed(2) : 'N/A';
 
   return (
     <Card className="nutrition-card interactive-element">
@@ -164,7 +291,25 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
       )}
       
       <CardHeader>
-        <CardTitle className="line-clamp-2">{getStringValue(detailedFood.description)}</CardTitle>
+        {isEditingTitle ? (
+          <input
+            ref={titleInputRef}
+            type="text"
+            value={editedTitle}
+            onChange={(e) => setEditedTitle(e.target.value)}
+            onBlur={() => setIsEditingTitle(false)}
+            onKeyDown={(e) => { if (e.key === 'Enter') setIsEditingTitle(false); }}
+            className="w-full text-lg font-semibold border-b border-input focus:outline-none bg-transparent p-0"
+          />
+        ) : (
+          <CardTitle
+            className="line-clamp-2 flex items-center gap-1 cursor-pointer underline decoration-muted-foreground underline-offset-2"
+            onClick={() => setIsEditingTitle(true)}
+          >
+            {editedTitle}
+            <Edit2 className="w-4 h-4 text-muted-foreground" />
+          </CardTitle>
+        )}
         
         <div className="flex flex-wrap gap-2 mt-2">
           {detailedFood.brandName && (
@@ -181,9 +326,29 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
         </div>
         
         <CardDescription>
-          Serving size: {detailedFood.servingSize && detailedFood.servingSizeUnit
-            ? `${detailedFood.servingSize}${formatUnit(detailedFood.servingSizeUnit)}`
-            : servingInfo}
+          <div className="mt-2">
+            <ServingSizeSelector
+              quantity={servingQty}
+              unit={servingUnit}
+              onChange={(q, u) => {
+                setServingQty(q);
+                setServingUnit(u);
+              }}
+              showAs={showAsLabel}
+              onShowAsChange={setShowAsLabel}
+            />
+            {/* Dual measurement display */}
+            {metric.unit !== servingUnit && (
+              <p className="text-xs text-muted-foreground">
+                Equivalent: {metric.value.toFixed(2)} {metric.unit}
+              </p>
+            )}
+            {imperial.unit !== servingUnit && (
+              <p className="text-xs text-muted-foreground">
+                Equivalent: {imperial.value.toFixed(2)} {imperial.unit}
+              </p>
+            )}
+          </div>
         </CardDescription>
       </CardHeader>
       
@@ -225,26 +390,12 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
             <h4 className="font-semibold text-sm">Detailed Nutrition Information</h4>
             
             <div className="grid grid-cols-1 gap-2 text-sm">
-              <div className="flex justify-between items-center py-1">
-                <span className="text-muted-foreground">Dietary Fiber</span>
-                <span className="font-medium">{formatNutrient(nutrients.carbs.fiber, 'g')}</span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="text-muted-foreground">Total Sugars</span>
-                <span className="font-medium">{formatNutrient(nutrients.carbs.sugar, 'g')}</span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="text-muted-foreground">Saturated Fat</span>
-                <span className="font-medium">{formatNutrient(nutrients.fats.saturated, 'g')}</span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="text-muted-foreground">Sodium</span>
-                <span className="font-medium">{formatNutrient(nutrients.micronutrients.sodium, 'mg')}</span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="text-muted-foreground">Cholesterol</span>
-                <span className="font-medium">{formatNutrient(nutrients.cholesterol, 'mg')}</span>
-              </div>
+              {getAllNutrientEntries(nutrients).map(({ label, value, unit }) => (
+                <div key={label} className="flex justify-between items-center py-1">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className="font-medium">{formatNutrient(value, unit)}</span>
+                </div>
+              ))}
             </div>
 
             {/* Raw JSON toggle */}
@@ -261,7 +412,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
             {showRawJson && (
               <div className="mt-3 p-3 bg-muted rounded-lg">
                 <pre className="text-xs overflow-auto max-h-40 text-muted-foreground">
-                  {JSON.stringify(detailedFood, null, 2)}
+                  {JSON.stringify(scaledFood, null, 2)}
                 </pre>
               </div>
             )}
@@ -280,29 +431,49 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
           {showDetails ? 'Less Info' : 'More Info'}
         </Button>
         
-        <Button
-          onClick={() => onSaveToNotion(detailedFood)}
-          disabled={isSaving || isAlreadyInNotion}
-          size="sm"
-          className="flex-1"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Saving...
-            </>
-          ) : isAlreadyInNotion ? (
-            <>
-              <CheckCircle className="w-4 h-4" />
-              Saved
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4" />
-              Save to Notion
-            </>
-          )}
-        </Button>
+        {isAlreadyInNotion ? (
+          <Button
+            onClick={() => {
+              if (updatePage && notionPageId) {
+                updatePage(scaledFoodWithDual, notionPageId);
+              }
+            }}
+            disabled={!isDirty || isSaving}
+            size="sm"
+            className="flex-1"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <Edit2 className="w-4 h-4" />
+                Update Page
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button
+            onClick={() => onSaveToNotion(scaledFoodWithDual)}
+            disabled={isSaving}
+            size="sm"
+            className="flex-1"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Save to Notion
+              </>
+            )}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
