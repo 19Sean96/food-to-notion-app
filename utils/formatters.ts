@@ -6,20 +6,7 @@ export const formatNutrient = (value: number | undefined, unit: string): string 
     return 'N/A';
   }
   
-  // Format number based on value size and type
-  let formattedValue: string;
-  
-  if (value < 1 && value > 0) {
-    // Small values (like vitamins in mg)
-    formattedValue = value.toFixed(2);
-  } else if (Number.isInteger(value)) {
-    // Whole numbers
-    formattedValue = value.toString();
-  } else {
-    // Other numbers with 1 decimal place
-    formattedValue = value.toFixed(1);
-  }
-  
+  const formattedValue = value.toFixed(2);
   return `${formattedValue}${unit}`;
 };
 

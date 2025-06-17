@@ -105,6 +105,10 @@ export interface ProcessedFoodItem {
   ingredients?: string;
   servingSize?: number;
   servingSizeUnit?: string;
+  servingSizeMetric?: number;
+  servingSizeMetricUnit?: string;
+  servingSizeImperial?: number;
+  servingSizeImperialUnit?: string;
   nutrients: {
     calories: number;
     energyKj: number;
@@ -158,6 +162,7 @@ export interface ProcessedFoodItem {
     };
     choline: number;
   };
+  servingSizeDisplay?: string;
 }
 
 export interface NotionDatabaseProps {
@@ -168,6 +173,12 @@ export interface NotionCreationResponse {
   success: boolean;
   message: string;
   foodName: string;
+  pageId?: string;
+}
+
+export interface NotionUpdateResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface NotionDatabaseInfo {

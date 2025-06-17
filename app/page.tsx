@@ -20,8 +20,10 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { getNotionDatabaseInfo } from '@/services/notionApi';
+import { NotionCreationResponse } from '@/types';
 
 export default function Home() {
+  const [pageIds, setPageIds] = useState<Record<number, string>>({});
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [notionModalOpen, setNotionModalOpen] = useState(false);
@@ -45,6 +47,7 @@ export default function Home() {
 
   const {
     saveToNotion,
+    updatePage,
     savingItems
   } = useNotionIntegration(notionDatabaseId);
 
@@ -84,9 +87,12 @@ export default function Home() {
   };
 
   const handleSaveFood = async (food: any) => {
-    const success = await saveToNotion(food);
-    if (success) {
+    const result: NotionCreationResponse = await saveToNotion(food);
+    if (result.success) {
       addExistingFdcId(food.id);
+      if (result.pageId) {
+        setPageIds(prev => ({ ...prev, [food.id]: result.pageId! }));
+      }
     }
   };
 
@@ -219,6 +225,8 @@ export default function Home() {
                               isSaving={savingItems[food.fdcId] || false}
                               onSaveToNotion={handleSaveFood}
                               isAlreadyInNotion={existingFdcIds.has(food.fdcId)}
+                              notionPageId={pageIds[food.fdcId]}
+                              updatePage={updatePage}
                             />
                           ))}
                         </div>
