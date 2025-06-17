@@ -8,7 +8,7 @@ const notion = new Client({
 
 export async function POST(request: Request) {
   try {
-    const { food, databaseId } = await request.json();
+    const { food, databaseId, servingSizeDisplay } = await request.json();
 
     if (!food || !databaseId) {
         return NextResponse.json({
@@ -18,9 +18,9 @@ export async function POST(request: Request) {
         }, { status: 400 });
     }
 
-    const servingSize = food.servingSize && food.servingSizeUnit
+    const servingSize = servingSizeDisplay || (food.servingSize && food.servingSizeUnit
       ? `${food.servingSize} ${food.servingSizeUnit}`
-      : 'Not specified';
+      : 'Not specified');
 
     const nutrients = food.nutrients;
 
@@ -36,9 +36,13 @@ export async function POST(request: Request) {
           select: mapFoodCategory(food.foodCategory)
         },
         "Serving Size": {
-          rich_text: [{
-            text: { content: servingSize }
-          }]
+          rich_text: [{ text: { content: servingSize } }]
+        },
+        "Serving Size Metric": {
+          rich_text: [{ text: { content: `${food.servingSizeMetric ?? ''} ${food.servingSizeMetricUnit ?? ''}` } }]
+        },
+        "Serving Size Imperial": {
+          rich_text: [{ text: { content: `${food.servingSizeImperial ?? ''} ${food.servingSizeImperialUnit ?? ''}` } }]
         },
         "Data Type": {
           select: { name: food.dataType || 'Foundational' }
@@ -655,7 +659,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
         success: true,
         message: 'Successfully added to Notion',
-        foodName: food.description
+        foodName: food.description,
+        pageId: response.id
       });
   } catch (error: any) {
     console.error('Error creating Notion page:', error);
