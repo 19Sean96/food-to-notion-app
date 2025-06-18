@@ -57,6 +57,7 @@ This directory contains reusable React components, separated into general compon
 -   `providers.tsx`: Wraps the application with context providers (e.g., React Query).
 -   `SearchModal.tsx`: A modal that likely contains the food search functionality.
 -   `ServingSizeSelector.tsx`: A component that allows users to select a serving size for a food item.
+-   `Header.tsx`: The main application header component that displays the app title, Notion connection status, and quick action buttons for searching foods and managing the database connection.
 
 ---
 
