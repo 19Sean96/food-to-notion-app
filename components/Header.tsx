@@ -1,19 +1,18 @@
+'use client';
+
 import { Button } from "@/components/ui/Button";
+import { useAppStore } from "@/store/appStore";
 import { CheckCircle, Database, Search, Settings } from "lucide-react";
 
-interface HeaderProps {
-  notionConnected: boolean;
-  databaseInfo: any;
-  setSearchModalOpen: (open: boolean) => void;
-  setNotionModalOpen: (open: boolean) => void;
-}
+const Header: React.FC = () => {
+  const { 
+    databaseInfo, 
+    toggleSearchModal, 
+    toggleNotionModal 
+  } = useAppStore();
+  
+  const notionConnected = !!databaseInfo;
 
-const Header: React.FC<HeaderProps> = ({
-  notionConnected,
-  databaseInfo,
-  setSearchModalOpen,
-  setNotionModalOpen,
-}) => {
   return (
     <header className="bg-card border-b border-border px-8 py-4 flex-shrink-0">
       <div className="flex items-center justify-between mb-4">
@@ -27,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({
           {notionConnected && databaseInfo && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium">
               <CheckCircle className="w-4 h-4" />
-              {databaseInfo.name} is connected
+              {databaseInfo.title} is connected
             </div>
           )}
           <Button variant="ghost" size="icon">
@@ -38,11 +37,11 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Quick Actions Row */}
       <div className="flex gap-4">
-        <Button onClick={() => setSearchModalOpen(true)}>
+        <Button onClick={() => toggleSearchModal(true)}>
           <Search className="w-4 h-4" />
           Search Foods
         </Button>
-        <Button variant="outline" onClick={() => setNotionModalOpen(true)}>
+        <Button variant="outline" onClick={() => toggleNotionModal(true)}>
           <Database className="w-4 h-4" />
           {notionConnected ? "Manage Database" : "Setup Notion"}
         </Button>

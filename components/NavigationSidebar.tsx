@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -9,58 +11,57 @@ import {
   FileText,
   HelpCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Save
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/appStore';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
-interface NavigationSidebarProps {
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
-  onOpenSearch: () => void;
-  onOpenNotionSetup: () => void;
-  notionConnected: boolean;
-}
+export const NavigationSidebar: React.FC = () => {
+  const {
+    sidebarCollapsed,
+    toggleSidebar,
+    toggleSearchModal,
+    toggleNotionModal,
+    databaseInfo,
+  } = useAppStore();
+  
+  const pathname = usePathname();
+  const notionConnected = !!databaseInfo;
 
-export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
-  isCollapsed,
-  onToggleCollapse,
-  onOpenSearch,
-  onOpenNotionSetup,
-  notionConnected
-}) => {
   const navigationItems = [
     {
+      href: '/',
       icon: Home,
-      label: 'Dashboard',
-      active: true,
-      onClick: () => {},
+      label: 'Home',
+    },
+    {
+      href: '/saved-items',
+      icon: Save,
+      label: 'Saved Items',
     },
     {
       icon: Search,
       label: 'Search Foods',
-      active: false,
-      onClick: onOpenSearch,
+      onClick: () => toggleSearchModal(true),
     },
     {
       icon: Database,
       label: 'Notion Setup',
-      active: false,
-      onClick: onOpenNotionSetup,
+      onClick: () => toggleNotionModal(true),
       badge: notionConnected ? 'Connected' : 'Setup Required',
       badgeColor: notionConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700',
     },
     {
       icon: BarChart3,
       label: 'Analytics',
-      active: false,
-      onClick: () => {},
       disabled: true,
     },
     {
       icon: FileText,
       label: 'Reports',
-      active: false,
-      onClick: () => {},
       disabled: true,
     },
   ];
@@ -78,15 +79,54 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
     },
   ];
 
+  const renderNavItem = (item: any) => {
+    const Icon = item.icon;
+    const isActive = item.href && pathname === item.href;
+
+    const buttonContent = (
+      <Button
+        variant={isActive ? "default" : "ghost"}
+        className={cn(
+          "w-full justify-start h-10",
+          sidebarCollapsed ? "px-2" : "px-3",
+          item.disabled && "opacity-50 cursor-not-allowed"
+        )}
+        onClick={item.disabled ? undefined : item.onClick}
+        disabled={item.disabled}
+      >
+        <Icon className="w-4 h-4 flex-shrink-0" />
+        {!sidebarCollapsed && (
+          <>
+            <span className="ml-3 truncate">{item.label}</span>
+            {item.badge && (
+              <span className={cn(
+                "ml-auto px-2 py-0.5 text-xs rounded-full font-medium",
+                item.badgeColor
+              )}>
+                {item.badge}
+              </span>
+            )}
+          </>
+        )}
+      </Button>
+    );
+
+    if (item.href) {
+      return <Link href={item.href}>{buttonContent}</Link>;
+    }
+
+    return buttonContent;
+  };
+
   return (
     <div className={cn(
       "flex flex-col h-full bg-card border-r border-border transition-all duration-300",
-      isCollapsed ? "w-16" : "w-64"
+      sidebarCollapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
-          {!isCollapsed && (
+          {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Database className="w-4 h-4 text-primary-foreground" />
@@ -97,48 +137,22 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onToggleCollapse}
+            onClick={toggleSidebar}
             className="h-8 w-8"
           >
-            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
         </div>
       </div>
 
       {/* Navigation Items */}
-      <div className="flex-1 p-2 space-y-1">
-        {navigationItems.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <Button
-              key={index}
-              variant={item.active ? "default" : "ghost"}
-              className={cn(
-                "w-full justify-start h-10",
-                isCollapsed ? "px-2" : "px-3",
-                item.disabled && "opacity-50 cursor-not-allowed"
-              )}
-              onClick={item.disabled ? undefined : item.onClick}
-              disabled={item.disabled}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {!isCollapsed && (
-                <>
-                  <span className="ml-3 truncate">{item.label}</span>
-                  {item.badge && (
-                    <span className={cn(
-                      "ml-auto px-2 py-0.5 text-xs rounded-full font-medium",
-                      item.badgeColor
-                    )}>
-                      {item.badge}
-                    </span>
-                  )}
-                </>
-              )}
-            </Button>
-          );
-        })}
-      </div>
+      <nav className="flex-1 p-2 space-y-1">
+        {navigationItems.map((item, index) => (
+          <div key={index}>
+            {renderNavItem(item)}
+          </div>
+        ))}
+      </nav>
 
       {/* Bottom Items */}
       <div className="p-2 border-t border-border space-y-1">
@@ -150,12 +164,12 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
               variant="ghost"
               className={cn(
                 "w-full justify-start h-10",
-                isCollapsed ? "px-2" : "px-3"
+                sidebarCollapsed ? "px-2" : "px-3"
               )}
               onClick={item.onClick}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
-              {!isCollapsed && (
+              {!sidebarCollapsed && (
                 <span className="ml-3 truncate">{item.label}</span>
               )}
             </Button>
