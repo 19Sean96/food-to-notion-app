@@ -1,43 +1,34 @@
+'use client';
+
 import React from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Search, Plus, Minus, Loader2 } from 'lucide-react';
-import { FoodQuery, DataTypeFilter } from '@/types';
+import { useAppStore } from '@/store/appStore';
 
-interface SearchModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  queries: FoodQuery[];
-  loading: boolean;
-  dataTypeFilter: DataTypeFilter;
-  onAddQuery: () => void;
-  onRemoveQuery: (id: string) => void;
-  onUpdateQuery: (id: string, text: string) => void;
-  onUpdateDataTypeFilter: (filter: DataTypeFilter) => void;
-  onSearch: () => void;
-}
+export const SearchModal: React.FC = () => {
+  const {
+    searchModalOpen,
+    toggleSearchModal,
+    queries,
+    loading,
+    dataTypeFilter,
+    addQuery,
+    removeQuery,
+    updateQuery,
+    updateDataTypeFilter,
+    searchAllFoods
+  } = useAppStore();
 
-export const SearchModal: React.FC<SearchModalProps> = ({
-  isOpen,
-  onClose,
-  queries,
-  loading,
-  dataTypeFilter,
-  onAddQuery,
-  onRemoveQuery,
-  onUpdateQuery,
-  onUpdateDataTypeFilter,
-  onSearch
-}) => {
   const handleSearch = () => {
-    onSearch();
-    onClose();
+    searchAllFoods();
+    toggleSearchModal(false);
   };
 
   return (
     <Modal
-      isOpen={isOpen}
-      onClose={onClose}
+      isOpen={searchModalOpen}
+      onClose={() => toggleSearchModal(false)}
       title="Search Food Database"
       description="Search the USDA FoodData Central database for detailed nutrition information"
       size="lg"
@@ -50,7 +41,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={onAddQuery}
+              onClick={addQuery}
               className="h-8"
             >
               <Plus className="w-4 h-4" />
@@ -66,7 +57,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                   <input
                     type="text"
                     value={query.text}
-                    onChange={(e) => onUpdateQuery(query.id, e.target.value)}
+                    onChange={(e) => updateQuery(query.id, e.target.value)}
                     placeholder="Enter food name (e.g., apple, chicken breast)"
                     className="w-full pl-10 pr-4 py-2 bg-background border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
                   />
@@ -75,7 +66,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => onRemoveQuery(query.id)}
+                    onClick={() => removeQuery(query.id)}
                     className="h-10 w-10 flex-shrink-0"
                   >
                     <Minus className="w-4 h-4" />
@@ -93,20 +84,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             <Button
               variant={dataTypeFilter.foundation ? "default" : "outline"}
               size="sm"
-              onClick={() => onUpdateDataTypeFilter({
-                ...dataTypeFilter,
-                foundation: !dataTypeFilter.foundation
-              })}
+              onClick={() => updateDataTypeFilter({ foundation: !dataTypeFilter.foundation })}
             >
               Foundation Foods
             </Button>
             <Button
               variant={dataTypeFilter.branded ? "default" : "outline"}
               size="sm"
-              onClick={() => onUpdateDataTypeFilter({
-                ...dataTypeFilter,
-                branded: !dataTypeFilter.branded
-              })}
+              onClick={() => updateDataTypeFilter({ branded: !dataTypeFilter.branded })}
             >
               Branded Products
             </Button>
@@ -120,7 +105,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         <div className="flex justify-end gap-3 pt-4 border-t border-border">
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={() => toggleSearchModal(false)}
           >
             Cancel
           </Button>

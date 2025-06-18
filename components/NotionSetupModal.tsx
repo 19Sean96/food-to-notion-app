@@ -1,38 +1,33 @@
+'use client';
+
 import React from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Database, ExternalLink, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { useAppStore } from '@/store/appStore';
 
-interface NotionSetupModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  databaseId: string;
-  onDatabaseIdChange: (id: string) => void;
-  onLoadDatabase: () => void;
-  loading: boolean;
-  databaseInfo: any;
-  connected: boolean;
-}
+export const NotionSetupModal: React.FC = () => {
+  const {
+    notionModalOpen,
+    toggleNotionModal,
+    notionDatabaseId,
+    setNotionDatabaseId,
+    loadDatabaseInfo,
+    databaseLoading,
+    databaseInfo
+  } = useAppStore();
 
-export const NotionSetupModal: React.FC<NotionSetupModalProps> = ({
-  isOpen,
-  onClose,
-  databaseId,
-  onDatabaseIdChange,
-  onLoadDatabase,
-  loading,
-  databaseInfo,
-  connected
-}) => {
+  const connected = !!databaseInfo;
+
   return (
     <Modal
-      isOpen={isOpen}
-      onClose={onClose}
+      isOpen={notionModalOpen}
+      onClose={() => toggleNotionModal(false)}
       title="Notion Database Setup"
       description="Connect your Notion database to save nutrition data"
       size="lg"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
         {/* Connection Status */}
         {connected && databaseInfo && (
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
@@ -41,7 +36,7 @@ export const NotionSetupModal: React.FC<NotionSetupModalProps> = ({
               <div>
                 <h3 className="font-medium text-emerald-900">Connected Successfully</h3>
                 <p className="text-sm text-emerald-700 mt-1">
-                  Database: {databaseInfo.name} • {databaseInfo.totalPages} pages
+                  Database: {databaseInfo.title} • {databaseInfo.pageCount} pages
                 </p>
               </div>
             </div>
@@ -58,8 +53,8 @@ export const NotionSetupModal: React.FC<NotionSetupModalProps> = ({
               <Database className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                value={databaseId}
-                onChange={(e) => onDatabaseIdChange(e.target.value)}
+                value={notionDatabaseId}
+                onChange={(e) => setNotionDatabaseId(e.target.value)}
                 placeholder="Enter your Notion database ID..."
                 className="w-full pl-10 pr-4 py-3 bg-background border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
               />
@@ -93,23 +88,23 @@ export const NotionSetupModal: React.FC<NotionSetupModalProps> = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Name:</span>
-                <span className="ml-2 font-medium">{databaseInfo.name}</span>
+                <span className="ml-2 font-medium">{databaseInfo.title}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Total Pages:</span>
-                <span className="ml-2 font-medium">{databaseInfo.totalPages}</span>
+                <span className="ml-2 font-medium">{databaseInfo.pageCount}</span>
               </div>
             </div>
             
             <div className="space-y-2">
               <span className="text-sm text-muted-foreground">Available Properties:</span>
               <div className="flex flex-wrap gap-2">
-                {databaseInfo.properties?.map((prop: string, index: number) => (
+                {databaseInfo.properties?.map((prop: any, index: number) => (
                   <span
                     key={index}
                     className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded-md"
                   >
-                    {prop}
+                    {prop.name}
                   </span>
                 ))}
               </div>
@@ -121,16 +116,16 @@ export const NotionSetupModal: React.FC<NotionSetupModalProps> = ({
         <div className="flex justify-end gap-3 pt-4 border-t border-border">
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={() => toggleNotionModal(false)}
           >
             {connected ? 'Close' : 'Cancel'}
           </Button>
           <Button
-            onClick={onLoadDatabase}
-            disabled={loading || !databaseId.trim()}
+            onClick={loadDatabaseInfo}
+            disabled={databaseLoading || !notionDatabaseId.trim()}
             className="min-w-32"
           >
-            {loading ? (
+            {databaseLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Connecting...
