@@ -234,7 +234,7 @@
   /* Professional interactions */
   .interactive-element {
     @apply transition-all duration-200 ease-out;
-    @apply hover:scale-[1.01] active:scale-[0.99];
+    @apply hover:scale-[1.01];
   }
   
   /* Responsive typography - Better hierarchy */

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import { Database, ExternalLink, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Database, ExternalLink, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface NotionSetupModalProps {
   isOpen: boolean;
@@ -24,6 +25,13 @@ export const NotionSetupModal: React.FC<NotionSetupModalProps> = ({
   databaseInfo,
   connected
 }) => {
+  useEffect(() => {
+    if (connected && databaseInfo) {
+      toast.success('Connected Successfully', {
+        description: `Database: ${databaseInfo.name} • ${databaseInfo.totalPages} pages`
+      });
+    }
+  }, [connected, databaseInfo]);
   return (
     <Modal
       isOpen={isOpen}
@@ -33,20 +41,6 @@ export const NotionSetupModal: React.FC<NotionSetupModalProps> = ({
       size="lg"
     >
       <div className="space-y-6">
-        {/* Connection Status */}
-        {connected && databaseInfo && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
-              <div>
-                <h3 className="font-medium text-emerald-900">Connected Successfully</h3>
-                <p className="text-sm text-emerald-700 mt-1">
-                  Database: {databaseInfo.name} • {databaseInfo.totalPages} pages
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Database ID Input */}
         <div className="space-y-4">
