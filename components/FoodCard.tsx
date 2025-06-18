@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { formatNutrient } from '@/utils/formatters';
 import { useFoodDetails } from '@/hooks/useFoodDetails';
+import { useNotionPage } from '@/hooks/useNotionPage';
 import { ServingSizeSelector } from '@/components/ServingSizeSelector';
 import { Unit, toMetric, toImperial } from '@/lib/conversion';
 import { scaleFoodItem } from '@/lib/nutrientScaling';
@@ -41,8 +42,13 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
   const [isEditingTitle, setIsEditingTitle] = React.useState<boolean>(false);
   const titleInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Use React Query to fetch detailed food information
-  const { data: detailedFood, isLoading, error } = useFoodDetails(food.fdcId);
+  // Fetch data either from Notion page or USDA API
+  const notionQuery = useNotionPage(notionPageId);
+  const usdaQuery = useFoodDetails(food.fdcId);
+
+  const detailedFood = notionPageId ? notionQuery.data?.page : usdaQuery.data;
+  const isLoading = notionPageId ? notionQuery.isLoading : usdaQuery.isLoading;
+  const error = notionPageId ? notionQuery.error : usdaQuery.error;
 
   // Update when detailedFood arrives
   React.useEffect(() => {
@@ -412,7 +418,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
             {showRawJson && (
               <div className="mt-3 p-3 bg-muted rounded-lg">
                 <pre className="text-xs overflow-auto max-h-40 text-muted-foreground">
-                  {JSON.stringify(scaledFood, null, 2)}
+                  {JSON.stringify(notionPageId ? notionQuery.data : scaledFood, null, 2)}
                 </pre>
               </div>
             )}
@@ -431,7 +437,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, isSaving, onSaveToNoti
           {showDetails ? 'Less Info' : 'More Info'}
         </Button>
         
-        {isAlreadyInNotion ? (
+        {notionPageId ? (
           <Button
             onClick={() => {
               if (updatePage && notionPageId) {

@@ -201,4 +201,8 @@ export type DataType = 'Foundational' | 'Branded';
 export interface DataTypeFilter {
   foundation: boolean;
   branded: boolean;
-} 
+}
+
+export interface FdcIdPageMap {
+  [fdcId: number]: string;
+}
