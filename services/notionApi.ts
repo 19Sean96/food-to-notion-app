@@ -78,4 +78,28 @@ export const getExistingFdcIds = async (databaseId: string): Promise<number[]> =
       // Return an empty array on error so the app can continue to function
       return [];
     }
-}; 
+};
+
+export const getFdcIdPageMap = async (
+  databaseId: string
+): Promise<Record<number, string>> => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/notion/database/${databaseId}/map`
+    );
+    return response.data.map || {};
+  } catch (error) {
+    console.error('Error fetching FDC ID map:', error);
+    return {};
+  }
+};
+
+export const getNotionPage = async (pageId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/notion/pages/${pageId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching Notion page:', error);
+    throw error;
+  }
+};

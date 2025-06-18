@@ -23,7 +23,6 @@ import { getNotionDatabaseInfo } from '@/services/notionApi';
 import { NotionCreationResponse } from '@/types';
 
 export default function Home() {
-  const [pageIds, setPageIds] = useState<Record<number, string>>({});
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [notionModalOpen, setNotionModalOpen] = useState(false);
@@ -41,6 +40,8 @@ export default function Home() {
     updateQuery,
     updateDataTypeFilter,
     addExistingFdcId,
+    addPageId,
+    pageIdMap,
     searchAllFoods,
     setFeedbackMessage
   } = useFoodSearch(notionDatabaseId);
@@ -91,7 +92,7 @@ export default function Home() {
     if (result.success) {
       addExistingFdcId(food.id);
       if (result.pageId) {
-        setPageIds(prev => ({ ...prev, [food.id]: result.pageId! }));
+        addPageId(food.id, result.pageId);
       }
     }
   };
@@ -225,7 +226,7 @@ export default function Home() {
                               isSaving={savingItems[food.fdcId] || false}
                               onSaveToNotion={handleSaveFood}
                               isAlreadyInNotion={existingFdcIds.has(food.fdcId)}
-                              notionPageId={pageIds[food.fdcId]}
+                              notionPageId={pageIdMap[food.fdcId]}
                               updatePage={updatePage}
                             />
                           ))}

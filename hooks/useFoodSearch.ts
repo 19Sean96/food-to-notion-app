@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { FoodQuery, FoodResult, FeedbackMessage, DataTypeFilter } from '@/types';
 import { searchFoods } from '@/services/usdaApi';
-import { getExistingFdcIds } from '@/services/notionApi';
+import { getFdcIdPageMap } from '@/services/notionApi';
 
 export const useFoodSearch = (databaseId: string) => {
   const [queries, setQueries] = useState<FoodQuery[]>([{ id: uuidv4(), text: '' }]);
@@ -14,6 +14,7 @@ export const useFoodSearch = (databaseId: string) => {
     branded: false
   });
   const [existingFdcIds, setExistingFdcIds] = useState<Set<number>>(new Set());
+  const [pageIdMap, setPageIdMap] = useState<Record<number, string>>({});
 
   const addQuery = useCallback(() => {
     setQueries(prev => [...prev, { id: uuidv4(), text: '' }]);
@@ -49,6 +50,10 @@ export const useFoodSearch = (databaseId: string) => {
     setExistingFdcIds(prev => new Set(prev).add(id));
   }, []);
 
+  const addPageId = useCallback((fdcId: number, pageId: string) => {
+    setPageIdMap(prev => ({ ...prev, [fdcId]: pageId }));
+  }, []);
+
   const searchAllFoods = useCallback(async () => {
     setLoading(true);
     setFeedbackMessage(null);
@@ -76,8 +81,9 @@ export const useFoodSearch = (databaseId: string) => {
       setResults(allFoods);
 
       if (databaseId) {
-        const ids = await getExistingFdcIds(databaseId);
-        setExistingFdcIds(new Set(ids));
+        const map = await getFdcIdPageMap(databaseId);
+        setPageIdMap(map);
+        setExistingFdcIds(new Set(Object.keys(map).map(Number)));
       }
 
       const totalFoods = allFoods.reduce((sum, result) => sum + result.foods.length, 0);
@@ -107,11 +113,13 @@ export const useFoodSearch = (databaseId: string) => {
     feedbackMessage,
     dataTypeFilter,
     existingFdcIds,
+    pageIdMap,
     addQuery,
     removeQuery,
     updateQuery,
     updateDataTypeFilter,
     addExistingFdcId,
+    addPageId,
     searchAllFoods,
     setFeedbackMessage
   };

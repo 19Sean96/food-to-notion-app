@@ -5,6 +5,28 @@ const notion = new Client({
   auth: process.env.NOTION_API_KEY,
 });
 
+export async function GET(
+  request: Request,
+  { params }: { params: { pageId: string } }
+) {
+  try {
+    const { pageId } = params;
+    const page = await notion.pages.retrieve({ page_id: pageId });
+    const blocks = await notion.blocks.children.list({
+      block_id: pageId,
+      page_size: 100,
+    });
+
+    return NextResponse.json({ page, blocks: blocks.results });
+  } catch (error: any) {
+    console.error('Error fetching Notion page:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to fetch Notion page' },
+      { status: error.status || 500 }
+    );
+  }
+}
+
 export async function PATCH(request: Request, { params }: { params: { pageId: string } }) {
   try {
     const { pageId } = params;
