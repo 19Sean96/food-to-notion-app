@@ -2,29 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { FoodCard } from '@/components/FoodCard';
-import { NavigationSidebar } from '@/components/NavigationSidebar';
 import { SearchModal } from '@/components/SearchModal';
 import { NotionSetupModal } from '@/components/NotionSetupModal';
 import { useFoodSearch } from '@/hooks/useFoodSearch';
 import { useNotionIntegration } from '@/hooks/useNotionIntegration';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+
 import { toast } from 'sonner';
-import { 
-  Search, 
-  Database, 
-  TrendingUp, 
-  Settings,
-  BarChart3,
-  CheckCircle,
-  AlertCircle
-} from 'lucide-react';
+import { Database } from 'lucide-react';
 import { getNotionDatabaseInfo } from '@/services/notionApi';
 import { NotionCreationResponse } from '@/types';
 
 export default function Home() {
   const [pageIds, setPageIds] = useState<Record<number, string>>({});
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [notionModalOpen, setNotionModalOpen] = useState(false);
   const [notionDatabaseId, setNotionDatabaseId] = useState('');
@@ -148,57 +137,8 @@ export default function Home() {
   }, [feedbackMessage, setFeedbackMessage]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex h-screen">
-        {/* Navigation Sidebar */}
-        <NavigationSidebar
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onOpenSearch={() => setSearchModalOpen(true)}
-          onOpenNotionSetup={() => setNotionModalOpen(true)}
-          notionConnected={notionConnected}
-        />
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Header with Quick Actions */}
-          <header className="bg-card border-b border-border px-8 py-4 flex-shrink-0">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Nutrition Hub</h1>
-                <p className="text-muted-foreground mt-1">Professional nutrition data management</p>
-              </div>
-              <div className="flex items-center gap-4">
-                {notionConnected && databaseInfo && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium">
-                    <CheckCircle className="w-4 h-4" />
-                    {databaseInfo.name} is connected
-                  </div>
-                )}
-                <Button variant="ghost" size="icon">
-                  <Settings className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-            
-            {/* Quick Actions Row */}
-            <div className="flex gap-4">
-              <Button onClick={() => setSearchModalOpen(true)}>
-                <Search className="w-4 h-4" />
-                Search Foods
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setNotionModalOpen(true)}
-              >
-                <Database className="w-4 h-4" />
-                {notionConnected ? 'Manage Database' : 'Setup Notion'}
-              </Button>
-            </div>
-          </header>
-
-          {/* Content Area */}
-          <div className="flex-1 px-4 py-6 overflow-y-auto">
+    <>
+      <div className="flex-1 px-4 py-6 overflow-y-auto">
             {/* Results Section */}
             {results.length > 0 ? (
               <div className="h-full flex flex-col">
@@ -250,33 +190,31 @@ export default function Home() {
               </div>
             )}
           </div>
-        </div>
       </div>
 
-      {/* Modals */}
-             <SearchModal
-         isOpen={searchModalOpen}
-         onClose={() => setSearchModalOpen(false)}
-         queries={queries}
-         loading={loading}
-         dataTypeFilter={dataTypeFilter}
-         onAddQuery={addQuery}
-         onRemoveQuery={removeQuery}
-         onUpdateQuery={updateQuery}
-         onUpdateDataTypeFilter={updateDataTypeFilter}
-         onSearch={handleSearch}
-       />
+      <SearchModal
+        isOpen={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
+        queries={queries}
+        loading={loading}
+        dataTypeFilter={dataTypeFilter}
+        onAddQuery={addQuery}
+        onRemoveQuery={removeQuery}
+        onUpdateQuery={updateQuery}
+        onUpdateDataTypeFilter={updateDataTypeFilter}
+        onSearch={handleSearch}
+      />
 
-             <NotionSetupModal
-         isOpen={notionModalOpen}
-         onClose={() => setNotionModalOpen(false)}
-         databaseId={notionDatabaseId}
-         onDatabaseIdChange={setNotionDatabaseId}
-         onLoadDatabase={handleLoadDatabase}
-         loading={databaseLoading}
-         databaseInfo={databaseInfo}
-         connected={notionConnected}
-       />
-    </div>
+      <NotionSetupModal
+        isOpen={notionModalOpen}
+        onClose={() => setNotionModalOpen(false)}
+        databaseId={notionDatabaseId}
+        onDatabaseIdChange={setNotionDatabaseId}
+        onLoadDatabase={handleLoadDatabase}
+        loading={databaseLoading}
+        databaseInfo={databaseInfo}
+        connected={notionConnected}
+      />
+    </>
   );
-} 
+}

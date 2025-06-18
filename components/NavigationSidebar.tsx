@@ -1,12 +1,17 @@
+'use client';
+
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { 
-  Search, 
-  Database, 
-  Settings, 
+  Search,
+  Database,
+  Settings,
   Home,
   BarChart3,
   FileText,
+  Save,
   HelpCircle,
   ChevronLeft,
   ChevronRight
@@ -16,9 +21,9 @@ import { cn } from '@/lib/utils';
 interface NavigationSidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  onOpenSearch: () => void;
-  onOpenNotionSetup: () => void;
-  notionConnected: boolean;
+  onOpenSearch?: () => void;
+  onOpenNotionSetup?: () => void;
+  notionConnected?: boolean;
 }
 
 export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
@@ -28,23 +33,27 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
   onOpenNotionSetup,
   notionConnected
 }) => {
+  const pathname = usePathname();
+
   const navigationItems = [
     {
       icon: Home,
-      label: 'Dashboard',
-      active: true,
-      onClick: () => {},
+      label: 'Home',
+      href: '/',
+    },
+    {
+      icon: Save,
+      label: 'Saved Items',
+      href: '/saved-items',
     },
     {
       icon: Search,
       label: 'Search Foods',
-      active: false,
       onClick: onOpenSearch,
     },
     {
       icon: Database,
       label: 'Notion Setup',
-      active: false,
       onClick: onOpenNotionSetup,
       badge: notionConnected ? 'Connected' : 'Setup Required',
       badgeColor: notionConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700',
@@ -52,15 +61,11 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
     {
       icon: BarChart3,
       label: 'Analytics',
-      active: false,
-      onClick: () => {},
       disabled: true,
     },
     {
       icon: FileText,
       label: 'Reports',
-      active: false,
-      onClick: () => {},
       disabled: true,
     },
   ];
@@ -109,32 +114,52 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
       <div className="flex-1 p-2 space-y-1">
         {navigationItems.map((item, index) => {
           const Icon = item.icon;
-          return (
-            <Button
-              key={index}
-              variant={item.active ? "default" : "ghost"}
-              className={cn(
-                "w-full justify-start h-10",
-                isCollapsed ? "px-2" : "px-3",
-                item.disabled && "opacity-50 cursor-not-allowed"
-              )}
-              onClick={item.disabled ? undefined : item.onClick}
-              disabled={item.disabled}
-            >
+          const isActive = item.href ? pathname === item.href : false;
+          const classes = cn(
+            "w-full justify-start h-10",
+            isCollapsed ? "px-2" : "px-3",
+            item.disabled && "opacity-50 cursor-not-allowed"
+          );
+          const content = (
+            <>
               <Icon className="w-4 h-4 flex-shrink-0" />
               {!isCollapsed && (
                 <>
                   <span className="ml-3 truncate">{item.label}</span>
                   {item.badge && (
-                    <span className={cn(
-                      "ml-auto px-2 py-0.5 text-xs rounded-full font-medium",
-                      item.badgeColor
-                    )}>
+                    <span
+                      className={cn(
+                        "ml-auto px-2 py-0.5 text-xs rounded-full font-medium",
+                        item.badgeColor
+                      )}
+                    >
                       {item.badge}
                     </span>
                   )}
                 </>
               )}
+            </>
+          );
+
+          return item.href ? (
+            <Button
+              asChild
+              key={index}
+              variant={isActive ? "default" : "ghost"}
+              className={classes}
+              disabled={item.disabled}
+            >
+              <Link href={item.href}>{content}</Link>
+            </Button>
+          ) : (
+            <Button
+              key={index}
+              variant={isActive ? "default" : "ghost"}
+              className={classes}
+              onClick={item.disabled ? undefined : item.onClick}
+              disabled={item.disabled}
+            >
+              {content}
             </Button>
           );
         })}
