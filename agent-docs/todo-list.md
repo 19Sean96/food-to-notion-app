@@ -26,16 +26,16 @@ When a task is completed, you can add implementation notes under it. These notes
 
 **Objective:** Introduce a global state manager (Zustand) to centralize UI state, data from APIs, and user interactions. This will eliminate prop-drilling and create a single source of truth.
 
--   **Task 1.1: Install Zustand**
+-   **[x] Task 1.1: Install Zustand**
     -   **Action:** Add `zustand` to the project dependencies.
     -   **Command:** `npm install zustand`
 
--   **Task 1.2: Create the Global Store**
+-   **[x] Task 1.2: Create the Global Store**
     -   **Action:** Create a new directory `store/`. Inside it, create a file named `appStore.ts`.
     -   **File:** `store/appStore.ts`
     -   **Details:** Define a Zustand store that will manage the entire application state. The initial state should include slices for UI modals, Notion integration, and food search data.
 
--   **Task 1.3: Define Store State and Actions**
+-   **[x] Task 1.3: Define Store State and Actions**
     -   **File:** `store/appStore.ts`
     -   **Action:** Define the state shape and actions within the store. This will replace the logic currently managed by `useState` in `app/page.tsx` and the custom hooks `useFoodSearch` and `useNotionIntegration`.
     -   **State to Centralize:**
@@ -53,49 +53,45 @@ When a task is completed, you can add implementation notes under it. These notes
 
 **Objective:** Refactor existing pages, components, and hooks to use the new Zustand store, removing old state management logic.
 
--   **Task 2.1: Refactor `app/page.tsx`**
+-   **[x] Task 2.1: Refactor `app/page.tsx`**
     -   **File:** `app/page.tsx`
     -   **Action:** Remove all `useState` and `useEffect` hooks related to the state now managed by Zustand. Replace them with calls to the `useAppStore` hook to select state and actions.
     -   **Details:** The component should become much leaner, primarily responsible for layout and passing down only essential, non-state props if any. The handler functions (`handleLoadDatabase`, `handleSaveFood`, `handleSearch`) will now just call the corresponding actions from the store.
 
--   **Task 2.2: Deprecate Old Hooks**
+-   **[x] Task 2.2: Deprecate Old Hooks**
     -   **Files:** `hooks/useFoodSearch.ts`, `hooks/useNotionIntegration.ts`
     -   **Action:** The logic from these hooks will have been moved into the Zustand store. These files can now be deleted.
 
--   **Task 2.3: Refactor Modals (`SearchModal` & `NotionSetupModal`)**
+-   **[x] Task 2.3: Refactor Modals (`SearchModal` & `NotionSetupModal`)**
     -   **Files:** `components/SearchModal.tsx`, `components/NotionSetupModal.tsx`
-    -   **Action:** Update these components to get their state and props (e.g., `isOpen`, `queries`, `loading`) directly from the `useAppStore` hook instead of receiving them as props from `app/page.tsx`.
+    -   **Action:** Update these components to get their state and props directly from the `useAppStore` hook.
 
--   **Task 2.4: Refactor `Header` and `NavigationSidebar`**
+-   **[x] Task 2.4: Refactor `Header` and `NavigationSidebar`**
     -   **Files:** `components/Header.tsx`, `components/NavigationSidebar.tsx`
-    -   **Action:** Connect these components to the `useAppStore` hook to get their state (`notionConnected`, `databaseInfo`, `isCollapsed`) and dispatch actions (`toggleSidebar`, `setSearchModalOpen`, etc.).
+    -   **Action:** Connect these components to the `useAppStore` hook to get their state and dispatch actions.
 
 ### Phase 3: Address Specific Issues & Bugs
 
 **Objective:** With the new state management in place, resolve the specific issues outlined in `additional-issue-details.md`.
 
--   **Task 3.1: Fix UI Routing & Shared Layout (Issue #3)**
+-   **[x] Task 3.1: Fix UI Routing & Shared Layout (Issue #3)**
     -   **File:** `app/layout.tsx`
-    -   **Action:** Move the `<NavigationSidebar />` and `<Header />` components from `app/page.tsx` into the root `app/layout.tsx`. This will create a persistent layout across all pages.
-    -   **Details:** The `children` prop in `layout.tsx` will render the content of `app/page.tsx` or `app/saved-items/page.tsx`.
+    -   **Action:** Move the `<NavigationSidebar />` and `<Header />` components from `app/page.tsx` into the root `app/layout.tsx`.
     -   **File:** `components/NavigationSidebar.tsx`
-    -   **Action:** Add logic to determine the active route using the `usePathname` hook from `next/navigation` and apply an active state to the navigation links. Add direct links for "Home" (`/`) and "Saved Items" (`/saved-items`).
+    -   **Action:** Add logic to determine the active route using the `usePathname` hook.
 
--   **Task 3.2: Fix Conditional Logic in `FoodCard` (Issue #1)**
+-   **[x] Task 3.2: Fix Conditional Logic in `FoodCard` (Issue #1)**
     -   **File:** `components/FoodCard.tsx`
     -   **Action:** Refactor the component's logic to correctly determine whether the "Save to Notion" or "Update Page" button should be displayed.
-    -   **Details:** The `isAlreadyInNotion` prop (derived from the store's `existingFdcIds`) should be the primary factor. The `isDirty` state should only enable the "Update Page" button if the item is already in Notion.
 
--   **Task 3.3: Fix Incorrect Data Rendering (Issue #2)**
-    -   **Action:** This issue should be largely resolved by the centralized state. We need to ensure that when `saveToNotion` or `updatePage` actions are successful, the state in the Zustand store is updated immediately.
-    -   **Details:** The `FoodCard` component should be refactored to derive all its displayed data from the `ProcessedFoodItem` object it receives, which will be sourced from the Zustand store, ensuring consistency.
+-   **[x] Task 3.3: Fix Incorrect Data Rendering (Issue #2)**
+    -   **Action:** Ensure that when `saveToNotion` or `updatePage` actions are successful, the state in the Zustand store is updated immediately.
 
--   **Task 3.4: Fix Miscellaneous UI Issues (Issue #4)**
+-   **[x] Task 3.4: Fix Miscellaneous UI Issues (Issue #4)**
     -   **File:** `components/NotionSetupModal.tsx`
-    -   **Action:** Add a max height and `overflow-y-auto` to the modal's content area to prevent it from exceeding the viewport height.
-    -   **File:** `components/FoodCard.tsx` and `tailwind.config.js`
-    -   **Action:** Investigate the unwanted focus animation. It's likely caused by a global style or a group-focus style on the Card component. Adjust the CSS to remove the focus ring on child button clicks.
+    -   **Action:** Add a max height and `overflow-y-auto` to the modal's content area.
+    -   **File:** `components/FoodCard.tsx`
+    -   **Action:** Adjust the CSS to remove the unwanted focus ring on child button clicks.
 
--   **Task 3.5: Resolve Double Toast Notifications**
-    -   **Action:** The state refactor in Phase 1 & 2 should prevent the redundant re-renders that cause this. This task is to verify that the issue is gone.
-    -   **Details:** Test the search functionality thoroughly to confirm that only one toast notification appears for a given search action. The `setTimeout` in the original `handleSearch` function is suspicious and should be removed in favor of a more robust state-driven approach.
+-   **[x] Task 3.5: Resolve Double Toast Notifications**
+    -   **Action:** The state refactor in Phase 1 & 2 should prevent the redundant re-renders that cause this. Task was to verify the fix.

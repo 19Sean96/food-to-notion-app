@@ -1,28 +1,56 @@
-# Active Issues & Codebase Analysis
+# Refactor Summary & Resolved Issues
 
-This document outlines active issues, potential improvements, and an analysis of the "Food to Notion" application's codebase.
+This document summarizes the major architectural refactor and the resolution of previously identified issues.
 
 ---
 
-## Components & State
+## 1. Global State Management with Zustand
 
-### State Management & Re-rendering
+The application has been refactored to use **Zustand** as a global state manager.
 
--   **Prop-Drilling in `app/page.tsx`**: The main `Home` component in `app/page.tsx` has grown into a large state manager. It fetches data and then passes numerous props and callbacks down to child components like `SearchModal`, `NotionSetupModal`, and `NavigationSidebar`. This pattern, known as "prop-drilling," makes the code harder to read, maintain, and debug. Any state update in the `Home` component could trigger re-renders in all child components, even if they don't use the updated state.
--   **Inter-dependent Hooks**: The `useFoodSearch` hook depends on `notionDatabaseId`, which is managed in the `Home` component. This creates a tight coupling between the component's state and the hook's internal logic. This can lead to complex data flows and make it difficult to isolate and test the hook's functionality.
--   **Complex State in `FoodCard.tsx`**: The `FoodCard` component manages a significant amount of its own state, including serving size, editable titles, and UI visibility toggles. While this encapsulation is good, the component has become complex. The `isDirty` logic, which checks for changes, is manually implemented and could be a source of bugs.
+-   **Problem Solved:** Eliminated "prop-drilling" where state was passed through multiple component layers. The main `app/page.tsx` component is no longer a bloated state manager.
+-   **Implementation:**
+    -   A central store was created at `store/appStore.ts`.
+    -   All application state (UI toggles, API data, search results) is now managed in the store.
+    -   Components now connect directly to the store to get the data and actions they need, simplifying the component tree.
+-   **Outcome:** The codebase is now more organized, predictable, and easier to maintain. State changes are more efficient, reducing unnecessary re-renders.
 
-### Hydration Issues
+---
 
--   **No Server-Side Rendering (SSR) or Static Site Generation (SSG)**: The entire application is rendered client-side (`'use client'`). This means the user sees a blank page until all the JavaScript loads and executes. For a data-driven application like this, it would be beneficial to render the initial state on the server to improve perceived performance and SEO.
--   **No Obvious Hydration Mismatches**: While there are no clear hydration errors, the lack of SSR means the application is not taking full advantage of Next.js's capabilities. A future refactor could introduce server-side data fetching for the initial page load.
+## 2. Notion as the Source of Truth
 
-### Recommendations:
+The data flow has been redesigned to treat Notion as the authoritative source for all saved food items.
 
--   **Refactor State Management**:
-    -   **Introduce a Global State Manager**: Instead of passing props down through multiple levels, consider using a global state management library like Zustand or React Context with `useReducer`. This would allow components to access the state they need directly, reducing prop-drilling and unnecessary re-renders.
-    -   **Decouple Hooks from Component State**: Refactor the `useFoodSearch` hook to be more self-contained. Instead of passing `notionDatabaseId` as an argument, the hook could fetch it from the global state.
-    -   **Simplify `FoodCard`**: Offload some of the complex state logic from `FoodCard` to a custom hook (e.g., `useFoodCardState`). This would make the component more focused on rendering UI and easier to test.
--   **Adopt SSR or SSG**: For the main page, consider fetching the initial data on the server using `getServerSideProps` or generating it at build time with `getStaticProps`. This would provide a faster initial load and improve the user experience.
+-   **Problem Solved:** Previously, the app would show stale data from the USDA API even if an item had been updated in Notion.
+-   **Implementation:**
+    -   A new API endpoint (`/api/notion/database/[databaseId]/pages`) was created to batch-fetch saved items from Notion.
+    -   The Zustand store now fetches all saved items on initial connection and stores them in a `savedFoodItems` state.
+    -   The `FoodCard` component was refactored to prioritize rendering this `savedFoodItems` data, falling back to the USDA API only for new, unsaved items.
+-   **Outcome:** The UI now consistently displays the most up-to-date information, reflecting any user edits made in Notion.
+
+---
+
+## 3. Component & Layout Refactoring
+
+The component architecture and routing layout have been significantly improved.
+
+-   **Problem Solved:** Deprecated and unused components cluttered the codebase. The main layout (Header, Sidebar) would re-render on every page navigation.
+-   **Implementation:**
+    -   Removed unused components: `FoodResultsList`, `Sidebar`, `FoodSearchForm`, `NotionSettings`, `Collapsible`.
+    -   Moved the `Header` and `NavigationSidebar` into the root `app/layout.tsx` to create a persistent, shared layout.
+    -   The `NavigationSidebar` now correctly highlights the active route.
+-   **Outcome:** A cleaner codebase and a smoother, more professional user experience with no layout shifts during navigation.
+
+---
+
+## 4. Specific Bug Fixes (Resolved)
+
+All specific bugs outlined in `additional-issue-details.md` have been addressed through the refactor:
+
+-   **Issue 1 (Conditional Logic):** The `FoodCard` "Save/Update" logic is now robustly tied to whether the item exists in the Notion-backed state.
+-   **Issue 2 (Incorrect Rendering):** Resolved by making Notion the source of truth (see point 2).
+-   **Issue 3 (UI Routing):** Resolved by implementing the shared `layout.tsx` (see point 3).
+-   **Issue 4 (Misc. UI):** The Notion modal height and `FoodCard` focus issues have been fixed.
+-   **Double Toast Notifications:** The unified state management has eliminated the race conditions that caused duplicate toasts.
 
 --- 

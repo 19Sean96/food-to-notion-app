@@ -16,6 +16,7 @@ The root directory contains configuration files for the Next.js framework, TypeS
 -   `lib/`: A collection of core utility and library functions.
 -   `node_modules/`: (Not shown in layout) Contains all the project's third-party dependencies.
 -   `services/`: Handles API client logic for external services.
+-   `store/`: Contains the Zustand global state management store.
 -   `types/`: Contains all custom TypeScript type definitions.
 -   `utils/`: Contains general-purpose utility functions.
 -   `components.json`: Configuration file for `shadcn/ui`.
@@ -33,31 +34,32 @@ This directory is the heart of the application, leveraging the Next.js App Route
 
 -   `api/`: Defines all server-side API routes.
     -   `notion/`: API routes for interacting with the Notion API.
-        -   `database/[databaseId]/...`: API endpoints for fetching and managing Notion databases.
-        -   `pages/[pageId]/...`: API endpoints for fetching and creating Notion pages.
+        -   `database/[databaseId]/ids/route.ts`: Fetches all FDC IDs from a database.
+        -   `database/[databaseId]/pages/route.ts`: Fetches detailed page data for a list of FDC IDs.
+        -   `pages/[pageId]/route.ts`: Updates a specific Notion page.
+        -   `pages/route.ts`: Creates a new Notion page.
     -   `usda/`: API routes for interacting with the USDA FoodData Central API.
         -   `food/[fdcId]/route.ts`: Fetches details for a specific food item by its FDC ID.
         -   `search/route.ts`: Searches for food items in the USDA database.
--   `saved-items/`: A route for displaying items the user has saved.
+-   `saved-items/`: A route for displaying items the user has saved from Notion.
 -   `globals.css`: Global stylesheet for the application.
--   `layout.tsx`: The root layout component for the entire application.
--   `page.tsx`: The entry point and main page of the application (homepage).
+-   `layout.tsx`: The root layout component for the entire application. Contains the shared `NavigationSidebar` and `Header`.
+-   `page.tsx`: The entry point and main page of the application (homepage), responsible for displaying search results.
 
 ---
 
 ## `components/` Directory
 
-This directory contains reusable React components, separated into general components and UI primitives.
+This directory contains reusable React components.
 
--   `ui/`: Contains UI primitives built with `shadcn/ui` (e.g., `Button.tsx`, `Card.tsx`, `Modal.tsx`). These are foundational building blocks for the application's interface.
--   `FoodCard.tsx`: A component to display a single food item's information.
--   `FoodResultsList.tsx`: Renders a list of `FoodCard` components based on search results.
+-   `ui/`: Contains UI primitives built with `shadcn/ui`.
+-   `FoodCard.tsx`: A versatile component to display a single food item's information, either from a new search or from saved Notion data.
 -   `NavigationSidebar.tsx`: The main sidebar for navigating the application.
--   `NotionSetupModal.tsx`: A modal to guide the user through the initial Notion setup process.
--   `providers.tsx`: Wraps the application with context providers (e.g., React Query).
--   `SearchModal.tsx`: A modal that likely contains the food search functionality.
+-   `NotionSetupModal.tsx`: A modal to guide the user through the Notion setup process.
+-   `providers.tsx`: Wraps the application with context providers (e.g., React Query, Toaster).
+-   `SearchModal.tsx`: A modal that contains the food search functionality.
 -   `ServingSizeSelector.tsx`: A component that allows users to select a serving size for a food item.
--   `Header.tsx`: The main application header component that displays the app title, Notion connection status, and quick action buttons for searching foods and managing the database connection.
+-   `Header.tsx`: The main application header component.
 
 ---
 
@@ -65,29 +67,35 @@ This directory contains reusable React components, separated into general compon
 
 This directory contains custom React hooks to encapsulate and reuse stateful logic.
 
--   `useFoodDetails.ts`: A hook to fetch and manage the state for a single food item's details.
--   `useFoodSearch.ts`: A hook to handle the logic for searching food items, including state management for query, results, and loading state.
--   `useNotionIntegration.ts`: A hook to manage the state and logic related to Notion API interactions.
+-   `useFoodDetails.ts`: A hook to fetch and manage the state for a single food item's details using React Query.
 
 ---
 
 ## `lib/` Directory
 
-This directory contains core, low-level utility functions that are used across the application.
+This directory contains core, low-level utility functions.
 
--   `conversion.ts`: Functions for converting data between different formats (e.g., from USDA API format to the application's internal format).
--   `notion.ts`: Utility functions specifically for interacting with the Notion API, likely containing logic to format requests and parse responses.
--   `nutrientScaling.ts`: Functions for calculating and scaling nutrient values based on serving size.
--   `utils.ts`: General utility functions. This is a common file generated by `shadcn/ui` and might contain helper functions for things like class name merging.
+-   `conversion.ts`: Functions for converting between different measurement units.
+-   `notion.ts`: Utility functions for mapping data to Notion's format.
+-   `nutrientScaling.ts`: Functions for calculating and scaling nutrient values.
+-   `utils.ts`: General utility functions (e.g., `cn` for class names).
 
 ---
 
 ## `services/` Directory
 
-This directory contains functions that are responsible for making API calls to the backend.
+This directory contains functions that are responsible for making API calls to the application's backend.
 
--   `notionApi.ts`: A service that abstracts the logic for making requests to the application's Notion API routes (`/api/notion/...`).
--   `usdaApi.ts`: A service that abstracts the logic for making requests to the application's USDA API routes (`/api/usda/...`).
+-   `notionApi.ts`: A service that abstracts the logic for making requests to the application's Notion API routes.
+-   `usdaApi.ts`: A service that abstracts the logic for making requests to the application's USDA API routes.
+
+---
+
+## `store/` Directory
+
+This directory contains the global state management logic for the application.
+
+-   `appStore.ts`: The central Zustand store that manages the entire application state, including UI state, Notion data, and search results.
 
 ---
 
